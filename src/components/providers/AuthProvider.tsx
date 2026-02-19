@@ -23,9 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
              // Ideally, decode the token or call /me to get user details
              // For now, let's just set the token so the app is "authenticated"
              // You really should add a /me endpoint to get the user name/role back
-
-             // Temporary fix: set dummy user until you make a /me endpoint
-             setAuth({ id: "init", name: "User", role: "USER" }, data.accessToken);
+             setAuth({ id: "init", name: "User", email: "user@example.com", role: "USER" }, data.accessToken);
         }
       } catch (error) {
         // Use is not logged in, that's fine.
