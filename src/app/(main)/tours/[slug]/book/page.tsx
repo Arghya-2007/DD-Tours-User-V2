@@ -158,11 +158,11 @@ export default function BookingPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label className="text-xs text-zinc-500 uppercase font-bold tracking-widest mb-2 block">Full Name</label>
-                        <input type="text" disabled value={user?.userName || ""} className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-3 text-zinc-400 cursor-not-allowed" />
+                        <input type="text" disabled value={user?.name || ""} className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-3 text-zinc-400 cursor-not-allowed" />
                     </div>
                     <div>
                         <label className="text-xs text-zinc-500 uppercase font-bold tracking-widest mb-2 block">Email Address</label>
-                        <input type="email" disabled value={user?.userEmail || ""} className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-3 text-zinc-400 cursor-not-allowed" />
+                        <input type="email" disabled value={user?.email || ""} className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-3 text-zinc-400 cursor-not-allowed" />
                     </div>
                     <div className="md:col-span-2">
                         <label className="text-xs text-zinc-500 uppercase font-bold tracking-widest mb-2 block">WhatsApp / Contact Number *</label>
