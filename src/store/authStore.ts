@@ -3,6 +3,7 @@ import { create } from 'zustand';
 interface User {
   id: string;
   name: string;
+  email: string; // 🚨 Added this line
   role: string;
 }
 
