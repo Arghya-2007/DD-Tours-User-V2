@@ -27,6 +27,7 @@ interface Tour {
   isFixedDate: boolean;
   fixedDate?: string | null;
   bookingDeadline?: string | null;
+  expectedMonth?: string | null;
   coveredPlaces: string[];
   includedItems: string[];
   images: string[];
