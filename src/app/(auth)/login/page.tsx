@@ -2,7 +2,8 @@
 
 import { useState, useRef, useLayoutEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+// 🚨 Added useSearchParams
+import { useRouter, useSearchParams } from "next/navigation";
 import { gsap } from "gsap";
 import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
 import { api } from "@/lib/axios";
@@ -10,6 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams(); // 🚨 Initialize the hook
   const setAuth = useAuthStore((state) => state.setAuth);
 
   // Form State
@@ -42,22 +44,22 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // 1. Call your Backend API
+      // 1. Call Backend API (automatically receives the 7-day cookie via withCredentials)
       const { data } = await api.post("/auth/login", {
         userEmail: email,
         password: password,
       });
 
-      // 2. Save User & Token to Store
-      // (Your backend returns: { success: true, user: {...}, accessToken: "..." })
+      // 2. Save User & Token to Zustand Store
       setAuth(data.user, data.accessToken);
 
-      // 3. Redirect to Home
-      router.push("/");
+      // 3. 🚨 SMART REDIRECT: Check if they came from a specific page, otherwise go home
+      const redirectUrl = searchParams.get("redirect") || "/";
+      router.push(redirectUrl);
 
     } catch (err: any) {
-      // Handle Errors
-      const msg = err.response?.data?.message || "Something went wrong";
+      // Handle Errors securely
+      const msg = err.response?.data?.message || "Invalid credentials or server error";
       setError(msg);
     } finally {
       setLoading(false);
@@ -67,7 +69,7 @@ export default function LoginPage() {
   return (
     <div ref={containerRef} className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#0a0a0a]">
 
-      {/* Background Glow (Optional Visual) */}
+      {/* Background Glow */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-orange-600/20 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px]" />
 
@@ -84,7 +86,7 @@ export default function LoginPage() {
         {/* Error Message */}
         {error && (
           <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg mb-6 text-sm">
-            <AlertCircle size={16} />
+            <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -135,10 +137,7 @@ export default function LoginPage() {
             className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
-              <>
-                <Loader2 className="animate-spin" size={20} />
-                Signing in...
-              </>
+              <><Loader2 className="animate-spin" size={20} /> Signing in...</>
             ) : (
               "Sign In"
             )}

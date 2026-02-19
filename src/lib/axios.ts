@@ -1,12 +1,13 @@
+// src/lib/axios.ts
 import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
 
-// Base URL for your Backend (Render URL in production, Localhost in dev)
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+// 🚨 Make sure this perfectly matches your backend structure (e.g., includes /v1 if needed)
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 export const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // Crucial! Allows sending cookies (refreshToken)
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -15,7 +16,6 @@ export const api = axios.create({
 // 1. Request Interceptor: Attach Access Token
 api.interceptors.request.use(
   (config) => {
-    // Read token directly from the store
     const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -31,30 +31,28 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 (Unauthorized) and we haven't retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Catch 401 (Unauthorized) or 403 (Forbidden)
+    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // Attempt to get a new token
         const { data } = await axios.post(
             `${BASE_URL}/auth/refresh-token`,
             {},
-            { withCredentials: true } // Send the cookie
+            { withCredentials: true }
         );
 
-        // Update the store with the new token
+        // 🚨 Use the real user data returned from the refresh endpoint
         useAuthStore.getState().setAuth(
-            useAuthStore.getState().user!, // Keep existing user info
+            data.user,
             data.accessToken
         );
 
-        // Retry the original request with new token
+        // Retry original request
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);
 
       } catch (refreshError) {
-        // If refresh fails, log the user out
         useAuthStore.getState().logout();
         return Promise.reject(refreshError);
       }

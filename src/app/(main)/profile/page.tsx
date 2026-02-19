@@ -40,7 +40,7 @@ const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1469854523086-cc02fe5d
 
 export default function ProfilePage() {
   const router = useRouter();
-  const logout = useAuthStore((state) => state.logout);
+  const { logout, isAuthenticated } = useAuthStore();
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"PROFILE" | "MISSIONS">("PROFILE");
@@ -69,6 +69,12 @@ export default function ProfilePage() {
     if (!isoString) return "Not set";
     return new Date(isoString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
   };
+
+useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login?redirect=/profile");
+    }
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
