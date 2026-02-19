@@ -1,60 +1,74 @@
 "use client";
+import { useRef } from "react";
 import Link from "next/link";
 import { Bell, Search, User } from "lucide-react";
-import { useAuthStore } from "@/store/authStore"; // 🚨 Import your store
+import { useAuthStore } from "@/store/authStore";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 export function TopBar() {
-  // 🚨 Pull state from Zustand
   const { isAuthenticated, user } = useAuthStore();
+  const topbarRef = useRef<HTMLElement>(null);
+
+  useGSAP(() => {
+    // Drop down from top
+    gsap.fromTo(
+        topbarRef.current,
+        { y: -50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: "power2.out", delay: 0.1 }
+    );
+  }, { scope: topbarRef });
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-md">
-      <div className="flex h-16 items-center justify-between px-4 md:px-8">
+      <header
+          ref={topbarRef}
+          className="sticky top-0 z-40 w-full border-b border-white/5 bg-surface/70 backdrop-blur-xl supports-backdrop-filter:bg-surface/40 shadow-sm shadow-black">
+        <div className="flex h-20 items-center justify-between px-4 md:px-8">
 
-        {/* LEFT SECTION */}
-        <div className="flex items-center gap-4">
-          {/* Mobile Logo */}
-          <Link href="/" className="md:hidden font-bold text-xl text-white tracking-tighter">
-            DD <span className="text-orange-500">Tours</span>
-          </Link>
+          {/* LEFT SECTION */}
+          <div className="flex items-center gap-6">
+            {/* Mobile Logo */}
+            <Link href="/" className="md:hidden font-black text-2xl text-white tracking-tighter">
+              DD <span className="text-primary">Tours</span>
+            </Link>
 
-          {/* Desktop Search Bar */}
-          <div className="hidden md:flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 focus-within:border-orange-500/50 transition-colors w-96">
-            <Search size={18} className="text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Search tours, destinations..."
-              className="bg-transparent border-none outline-none text-sm text-white placeholder:text-zinc-500 w-full"
-            />
+            {/* Desktop Search Bar - Expanding Effect */}
+            <div className="hidden md:flex items-center gap-3 bg-surface-hover px-5 py-2.5 rounded-full border border-white/5 focus-within:border-primary/50 focus-within:bg-[#1a1a1a] focus-within:shadow-[0_0_15px_rgba(255,69,0,0.1)] transition-all duration-300 w-80 focus-within:w-96 group">
+              <Search size={18} className="text-zinc-500 group-focus-within:text-primary transition-colors" />
+              <input
+                  type="text"
+                  placeholder="Search destinations..."
+                  className="bg-transparent border-none outline-none text-sm font-medium text-white placeholder:text-zinc-600 w-full"
+              />
+            </div>
+          </div>
+
+          {/* RIGHT SECTION */}
+          <div className="flex items-center gap-5">
+            {/* Notification Bell with pulse effect */}
+            <button className="relative p-2.5 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/10 group">
+              <Bell size={22} className="group-hover:rotate-12 transition-transform" />
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-primary rounded-full border-2 border-surface shadow-[0_0_8px_rgba(255,69,0,0.8)] animate-pulse"></span>
+            </button>
+
+            {/* DYNAMIC Mobile Profile Icon */}
+            {isAuthenticated ? (
+                <Link
+                    href="/profile"
+                    className="md:hidden w-10 h-10 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-white text-base font-black shadow-[0_0_15px_rgba(255,69,0,0.4)] border-2 border-surface"
+                >
+                  {user?.name?.charAt(0).toUpperCase() || <User size={18} />}
+                </Link>
+            ) : (
+                <Link
+                    href="/login"
+                    className="md:hidden text-[11px] font-black uppercase tracking-widest text-primary border border-primary/30 bg-primary/10 px-4 py-2 rounded-full hover:bg-primary hover:text-white transition-all shadow-lg"
+                >
+                  Sign In
+                </Link>
+            )}
           </div>
         </div>
-
-        {/* RIGHT SECTION */}
-        <div className="flex items-center gap-4">
-          {/* Notification Bell */}
-          <button className="relative p-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/5">
-            <Bell size={20} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-orange-500 rounded-full border-2 border-[#0a0a0a]"></span>
-          </button>
-
-          {/* 🚨 DYNAMIC Mobile Profile Icon */}
-          {isAuthenticated ? (
-            <Link
-              href="/profile"
-              className="md:hidden w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-orange-500/20"
-            >
-              {user?.name?.charAt(0).toUpperCase() || <User size={16} />}
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="md:hidden text-[10px] font-bold uppercase tracking-widest text-orange-500 border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 rounded-full hover:bg-orange-500 hover:text-white transition-all"
-            >
-              Sign In
-            </Link>
-          )}
-        </div>
-      </div>
-    </header>
+      </header>
   );
 }

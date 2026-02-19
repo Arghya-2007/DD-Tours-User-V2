@@ -1,117 +1,157 @@
+"use client";
+import { useRef } from "react";
 import Link from "next/link";
 import {
   Facebook, Twitter, Instagram, Linkedin, Youtube,
   MapPin, Phone, Mail, ArrowRight
 } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+
+// Register the GSAP plugin
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export const Footer = () => {
+  const footerRef = useRef<HTMLElement>(null);
+
+  useGSAP(() => {
+    // Staggered reveal when scrolling down to the footer
+    gsap.fromTo(
+        ".footer-col",
+        { y: 50, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: footerRef.current,
+            start: "top 85%", // Starts animation when footer is 85% down the screen
+            toggleActions: "play none none reverse",
+          }
+        }
+    );
+  }, { scope: footerRef });
+
   return (
-    <footer className="bg-[#050505] border-t border-white/10 pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <footer ref={footerRef} className="bg-[#050505] border-t border-white/5 pt-20 pb-10 relative overflow-hidden">
+        {/* Optional: Subtle ambient glow in the background */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-[#FF4500] opacity-[0.03] blur-[100px] pointer-events-none"></div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
 
-          {/* 1. Brand Section */}
-          <div className="space-y-6">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center font-black text-white text-xl">
-                DD
-              </div>
-              <span className="text-xl font-bold text-white tracking-tight">
-                DD Tours
+            {/* 1. Brand Section */}
+            <div className="space-y-6 footer-col">
+              <Link href="/" className="flex items-center gap-3 group">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF4500] to-[#E63946] flex items-center justify-center font-black text-white text-xl shadow-[0_0_20px_rgba(255,69,0,0.4)] transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
+                  DD
+                </div>
+                <span className="text-2xl font-black text-white tracking-tighter">
+                DD <span className="text-[#FF4500]">Tours</span>
               </span>
-            </Link>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              Crafting unforgettable journeys since 2020. We believe in sustainable, immersive, and hassle-free travel experiences for the modern explorer.
-            </p>
-            <div className="flex gap-4">
-              {[Facebook, Twitter, Instagram, Linkedin, Youtube].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-orange-600 hover:text-white transition-all"
+              </Link>
+              <p className="text-zinc-400 text-sm leading-relaxed font-medium">
+                Crafting unforgettable journeys since 2020. We believe in sustainable, immersive, and hassle-free travel experiences for the modern explorer.
+              </p>
+              <div className="flex gap-4">
+                {[Facebook, Twitter, Instagram, Linkedin, Youtube].map((Icon, i) => (
+                    <a
+                        key={i}
+                        href="#"
+                        className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:bg-[#FF4500] hover:text-white hover:-translate-y-1 hover:shadow-[0_5px_15px_rgba(255,69,0,0.4)] transition-all duration-300"
+                    >
+                      <Icon size={18} />
+                    </a>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Quick Links */}
+            <div className="footer-col">
+              <h3 className="text-white font-bold text-lg mb-6 tracking-wide">Explore</h3>
+              <ul className="space-y-4">
+                {[
+                  { label: "All Tours", href: "/tours" },
+                  { label: "Travel Blogs", href: "/blogs" },
+                  { label: "Wall of Love", href: "/reviews" },
+                  { label: "About Us", href: "/about" },
+                ].map((link, i) => (
+                    <li key={i}>
+                      <Link href={link.href} className="text-zinc-400 hover:text-white text-sm font-medium transition-all duration-300 flex items-center gap-3 group">
+                        <span className="w-2 h-2 rounded-full bg-zinc-700 group-hover:bg-[#FF4500] group-hover:scale-125 group-hover:shadow-[0_0_8px_rgba(255,69,0,0.8)] transition-all duration-300" />
+                        <span className="group-hover:translate-x-1 transition-transform duration-300">{link.label}</span>
+                      </Link>
+                    </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* 3. Contact Info */}
+            <div className="footer-col">
+              <h3 className="text-white font-bold text-lg mb-6 tracking-wide">Contact</h3>
+              <ul className="space-y-5">
+                <li className="flex items-start gap-4 text-zinc-400 text-sm group cursor-default">
+                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FF4500]/10 transition-colors">
+                    <MapPin size={18} className="text-[#FF4500]" />
+                  </div>
+                  <span className="mt-1 font-medium group-hover:text-zinc-200 transition-colors">123 Adventure Lane, Tech City,<br />Kolkata, WB 700001</span>
+                </li>
+                <li className="flex items-center gap-4 text-zinc-400 text-sm group cursor-pointer">
+                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FF4500]/10 transition-colors">
+                    <Phone size={18} className="text-[#FF4500]" />
+                  </div>
+                  <span className="font-medium group-hover:text-zinc-200 transition-colors">+91 98765 43210</span>
+                </li>
+                <li className="flex items-center gap-4 text-zinc-400 text-sm group cursor-pointer">
+                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FF4500]/10 transition-colors">
+                    <Mail size={18} className="text-[#FF4500]" />
+                  </div>
+                  <span className="font-medium group-hover:text-zinc-200 transition-colors">support@ddtours.in</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* 4. Newsletter */}
+            <div className="footer-col">
+              <h3 className="text-white font-bold text-lg mb-6 tracking-wide">Newsletter</h3>
+              <p className="text-zinc-400 text-sm font-medium mb-5">
+                Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
+              </p>
+              <form className="relative group">
+                <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="w-full bg-[#111] border border-white/10 rounded-xl py-3.5 pl-4 pr-14 text-white text-sm font-medium focus:border-[#FF4500] focus:bg-[#151515] focus:ring-1 focus:ring-[#FF4500] focus:shadow-[0_0_15px_rgba(255,69,0,0.1)] focus:outline-none transition-all duration-300"
+                />
+                <button
+                    type="button"
+                    className="absolute right-1.5 top-1.5 p-2 bg-gradient-to-r from-[#FF4500] to-[#E63946] rounded-lg text-white hover:scale-105 hover:shadow-[0_0_15px_rgba(255,69,0,0.4)] transition-all duration-300"
                 >
-                  <Icon size={18} />
-                </a>
-              ))}
+                  <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </form>
+            </div>
+
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 footer-col">
+            <p className="text-zinc-500 text-xs font-semibold tracking-wide">
+              © {new Date().getFullYear()} DD Tours & Travels. All rights reserved.
+            </p>
+            <div className="flex gap-6">
+              <Link href="#" className="text-zinc-500 hover:text-[#FF4500] font-medium text-xs transition-colors">Privacy Policy</Link>
+              <Link href="#" className="text-zinc-500 hover:text-[#FF4500] font-medium text-xs transition-colors">Terms of Service</Link>
+              <Link href="#" className="text-zinc-500 hover:text-[#FF4500] font-medium text-xs transition-colors">Cookies</Link>
             </div>
           </div>
 
-          {/* 2. Quick Links */}
-          <div>
-            <h3 className="text-white font-bold mb-6">Explore</h3>
-            <ul className="space-y-4">
-              {[
-                { label: "All Tours", href: "/tours" },
-                { label: "Travel Blogs", href: "/blogs" },
-                { label: "Wall of Love", href: "/reviews" },
-                { label: "About Us", href: "/about" },
-              ].map((link, i) => (
-                <li key={i}>
-                  <Link href={link.href} className="text-zinc-400 hover:text-orange-500 text-sm transition-colors flex items-center gap-2 group">
-                    <span className="w-1 h-1 rounded-full bg-zinc-600 group-hover:bg-orange-500 transition-colors" />
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 3. Contact Info */}
-          <div>
-            <h3 className="text-white font-bold mb-6">Contact</h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3 text-zinc-400 text-sm">
-                <MapPin size={18} className="text-orange-500 shrink-0 mt-0.5" />
-                <span>123 Adventure Lane, Tech City,<br />Kolkata, WB 700001</span>
-              </li>
-              <li className="flex items-center gap-3 text-zinc-400 text-sm">
-                <Phone size={18} className="text-orange-500 shrink-0" />
-                <span>+91 98765 43210</span>
-              </li>
-              <li className="flex items-center gap-3 text-zinc-400 text-sm">
-                <Mail size={18} className="text-orange-500 shrink-0" />
-                <span>support@ddtours.in</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* 4. Newsletter */}
-          <div>
-            <h3 className="text-white font-bold mb-6">Newsletter</h3>
-            <p className="text-zinc-400 text-sm mb-4">
-              Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
-            </p>
-            <form className="relative">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-white text-sm focus:border-orange-500 focus:outline-none transition-colors"
-              />
-              <button
-                type="button"
-                className="absolute right-1.5 top-1.5 p-1.5 bg-orange-600 rounded-lg text-white hover:bg-orange-700 transition-colors"
-              >
-                <ArrowRight size={16} />
-              </button>
-            </form>
-          </div>
-
         </div>
-
-        {/* Bottom Bar */}
-        <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-zinc-500 text-xs">
-            © {new Date().getFullYear()} DD Tours & Travels. All rights reserved.
-          </p>
-          <div className="flex gap-6">
-            <Link href="#" className="text-zinc-500 hover:text-white text-xs">Privacy Policy</Link>
-            <Link href="#" className="text-zinc-500 hover:text-white text-xs">Terms of Service</Link>
-            <Link href="#" className="text-zinc-500 hover:text-white text-xs">Cookies</Link>
-          </div>
-        </div>
-
-      </div>
-    </footer>
+      </footer>
   );
 };
