@@ -227,7 +227,7 @@ function TourCard({ tour, index }: { tour: Tour; index: number }) {
                 <Clock size={12} className="text-orange-500" /> {tour.tourDuration}
             </div>
 
-            {/* Days Left (Red/Orange if urgent, otherwise grey) */}
+            {/* Days Left (Red/Orange if urgent, otherwise gray) */}
             {daysLeftText && (
                 <div className={`backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${isUrgent ? 'bg-red-500/20 text-red-400' : 'bg-black/60 text-white'}`}>
                     <AlertTriangle size={12} /> {daysLeftText}
