@@ -11,18 +11,19 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
-}: Readonly<{
+                                     children,
+                                   }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-[#0a0a0a] text-white overflow-x-hidden`}>
-        {/* We keep AuthProvider here so it works EVERYWHERE (even on Login) */}
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <html lang="en" className="dark">
+      <body
+          className={`${inter.className} bg-background text-white antialiased selection:bg-primary selection:text-white overflow-x-hidden`}
+      >
+      <AuthProvider>
+        {children}
+      </AuthProvider>
       </body>
-    </html>
+      </html>
   );
 }

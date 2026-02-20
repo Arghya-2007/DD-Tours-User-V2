@@ -11,7 +11,6 @@ export function TopBar() {
   const topbarRef = useRef<HTMLElement>(null);
 
   useGSAP(() => {
-    // Drop down from top
     gsap.fromTo(
         topbarRef.current,
         { y: -50, opacity: 0 },
@@ -33,7 +32,7 @@ export function TopBar() {
             </Link>
 
             {/* Desktop Search Bar - Expanding Effect */}
-            <div className="hidden md:flex items-center gap-3 bg-surface-hover px-5 py-2.5 rounded-full border border-white/5 focus-within:border-primary/50 focus-within:bg-[#1a1a1a] focus-within:shadow-[0_0_15px_rgba(255,69,0,0.1)] transition-all duration-300 w-80 focus-within:w-96 group">
+            <div className="hidden md:flex items-center gap-3 bg-surface-hover px-5 py-2.5 rounded-full border border-white/5 focus-within:border-primary/50 focus-within:bg-surface focus-within:shadow-[0_0_15px_var(--color-primary)] transition-all duration-300 w-80 focus-within:w-96 group">
               <Search size={18} className="text-zinc-500 group-focus-within:text-primary transition-colors" />
               <input
                   type="text"
@@ -48,14 +47,14 @@ export function TopBar() {
             {/* Notification Bell with pulse effect */}
             <button className="relative p-2.5 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/10 group">
               <Bell size={22} className="group-hover:rotate-12 transition-transform" />
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-primary rounded-full border-2 border-surface shadow-[0_0_8px_rgba(255,69,0,0.8)] animate-pulse"></span>
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-primary rounded-full border-2 border-surface shadow-[0_0_8px_var(--color-primary)] animate-pulse"></span>
             </button>
 
             {/* DYNAMIC Mobile Profile Icon */}
             {isAuthenticated ? (
                 <Link
                     href="/profile"
-                    className="md:hidden w-10 h-10 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-white text-base font-black shadow-[0_0_15px_rgba(255,69,0,0.4)] border-2 border-surface"
+                    className="md:hidden w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-base font-black shadow-[0_0_15px_var(--color-primary)] border-2 border-surface"
                 >
                   {user?.name?.charAt(0).toUpperCase() || <User size={18} />}
                 </Link>

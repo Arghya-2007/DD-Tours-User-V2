@@ -9,7 +9,6 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 
-// Register the GSAP plugin
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
@@ -18,29 +17,44 @@ export const Footer = () => {
   const footerRef = useRef<HTMLElement>(null);
 
   useGSAP(() => {
-    // Staggered reveal when scrolling down to the footer
-    gsap.fromTo(
-        ".footer-col",
-        { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          stagger: 0.15,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: footerRef.current,
-            start: "top 85%", // Starts animation when footer is 85% down the screen
-            toggleActions: "play none none reverse",
+    // 1. Check if the component itself is ready
+    if (!footerRef.current) return;
+
+    // 2. Wait 100ms for Next.js to finish building the DOM
+    const timer = setTimeout(() => {
+
+      // 3. Safely look for our custom scroll container
+      const customScroller = document.querySelector("#main-scroll-container");
+
+      gsap.fromTo(
+          ".footer-col",
+          { y: 50, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: footerRef.current,
+              // THE MAGIC: Only apply the scroller if it successfully found it
+              ...(customScroller ? { scroller: customScroller } : {}),
+              start: "top 85%",
+              toggleActions: "play none none reverse",
+            }
           }
-        }
-    );
+      );
+    }, 100);
+
+    // 4. Cleanup function to prevent memory leaks
+    return () => clearTimeout(timer);
+
   }, { scope: footerRef });
 
   return (
-      <footer ref={footerRef} className="bg-[#050505] border-t border-white/5 pt-20 pb-10 relative overflow-hidden">
-        {/* Optional: Subtle ambient glow in the background */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-[#FF4500] opacity-[0.03] blur-[100px] pointer-events-none"></div>
+      <footer ref={footerRef} className="bg-background border-t border-white/5 pt-20 pb-10 relative overflow-hidden">
+        {/* Subtle ambient glow in the background */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-primary opacity-[0.03] blur-[100px] pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
@@ -48,11 +62,11 @@ export const Footer = () => {
             {/* 1. Brand Section */}
             <div className="space-y-6 footer-col">
               <Link href="/" className="flex items-center gap-3 group">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF4500] to-[#E63946] flex items-center justify-center font-black text-white text-xl shadow-[0_0_20px_rgba(255,69,0,0.4)] transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-black text-white text-xl shadow-[0_0_20px_var(--color-primary)] transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
                   DD
                 </div>
                 <span className="text-2xl font-black text-white tracking-tighter">
-                DD <span className="text-[#FF4500]">Tours</span>
+                DD <span className="text-primary">Tours</span>
               </span>
               </Link>
               <p className="text-zinc-400 text-sm leading-relaxed font-medium">
@@ -63,7 +77,7 @@ export const Footer = () => {
                     <a
                         key={i}
                         href="#"
-                        className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:bg-[#FF4500] hover:text-white hover:-translate-y-1 hover:shadow-[0_5px_15px_rgba(255,69,0,0.4)] transition-all duration-300"
+                        className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:bg-primary hover:text-white hover:-translate-y-1 hover:shadow-[0_5px_15px_var(--color-primary)] transition-all duration-300"
                     >
                       <Icon size={18} />
                     </a>
@@ -83,7 +97,7 @@ export const Footer = () => {
                 ].map((link, i) => (
                     <li key={i}>
                       <Link href={link.href} className="text-zinc-400 hover:text-white text-sm font-medium transition-all duration-300 flex items-center gap-3 group">
-                        <span className="w-2 h-2 rounded-full bg-zinc-700 group-hover:bg-[#FF4500] group-hover:scale-125 group-hover:shadow-[0_0_8px_rgba(255,69,0,0.8)] transition-all duration-300" />
+                        <span className="w-2 h-2 rounded-full bg-zinc-700 group-hover:bg-primary group-hover:scale-125 group-hover:shadow-[0_0_8px_var(--color-primary)] transition-all duration-300" />
                         <span className="group-hover:translate-x-1 transition-transform duration-300">{link.label}</span>
                       </Link>
                     </li>
@@ -96,20 +110,20 @@ export const Footer = () => {
               <h3 className="text-white font-bold text-lg mb-6 tracking-wide">Contact</h3>
               <ul className="space-y-5">
                 <li className="flex items-start gap-4 text-zinc-400 text-sm group cursor-default">
-                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FF4500]/10 transition-colors">
-                    <MapPin size={18} className="text-[#FF4500]" />
+                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-primary/10 transition-colors">
+                    <MapPin size={18} className="text-primary" />
                   </div>
-                  <span className="mt-1 font-medium group-hover:text-zinc-200 transition-colors">123 Adventure Lane, Tech City,<br />Kolkata, WB 700001</span>
+                  <span className="mt-1 font-medium group-hover:text-zinc-200 transition-colors">DD Tours Headquarters,<br />Ranaghat, West Bengal</span>
                 </li>
                 <li className="flex items-center gap-4 text-zinc-400 text-sm group cursor-pointer">
-                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FF4500]/10 transition-colors">
-                    <Phone size={18} className="text-[#FF4500]" />
+                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-primary/10 transition-colors">
+                    <Phone size={18} className="text-primary" />
                   </div>
                   <span className="font-medium group-hover:text-zinc-200 transition-colors">+91 98765 43210</span>
                 </li>
                 <li className="flex items-center gap-4 text-zinc-400 text-sm group cursor-pointer">
-                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FF4500]/10 transition-colors">
-                    <Mail size={18} className="text-[#FF4500]" />
+                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-primary/10 transition-colors">
+                    <Mail size={18} className="text-primary" />
                   </div>
                   <span className="font-medium group-hover:text-zinc-200 transition-colors">support@ddtours.in</span>
                 </li>
@@ -126,11 +140,11 @@ export const Footer = () => {
                 <input
                     type="email"
                     placeholder="Enter your email"
-                    className="w-full bg-[#111] border border-white/10 rounded-xl py-3.5 pl-4 pr-14 text-white text-sm font-medium focus:border-[#FF4500] focus:bg-[#151515] focus:ring-1 focus:ring-[#FF4500] focus:shadow-[0_0_15px_rgba(255,69,0,0.1)] focus:outline-none transition-all duration-300"
+                    className="w-full bg-surface border border-white/10 rounded-xl py-3.5 pl-4 pr-14 text-white text-sm font-medium focus:border-primary focus:bg-surface-hover focus:ring-1 focus:ring-primary focus:shadow-[0_0_15px_var(--color-primary)] focus:outline-none transition-all duration-300"
                 />
                 <button
                     type="button"
-                    className="absolute right-1.5 top-1.5 p-2 bg-gradient-to-r from-[#FF4500] to-[#E63946] rounded-lg text-white hover:scale-105 hover:shadow-[0_0_15px_rgba(255,69,0,0.4)] transition-all duration-300"
+                    className="absolute right-1.5 top-1.5 p-2 bg-gradient-to-r from-primary to-accent rounded-lg text-white hover:scale-105 hover:shadow-[0_0_15px_var(--color-primary)] transition-all duration-300"
                 >
                   <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
                 </button>
@@ -145,9 +159,9 @@ export const Footer = () => {
               © {new Date().getFullYear()} DD Tours & Travels. All rights reserved.
             </p>
             <div className="flex gap-6">
-              <Link href="#" className="text-zinc-500 hover:text-[#FF4500] font-medium text-xs transition-colors">Privacy Policy</Link>
-              <Link href="#" className="text-zinc-500 hover:text-[#FF4500] font-medium text-xs transition-colors">Terms of Service</Link>
-              <Link href="#" className="text-zinc-500 hover:text-[#FF4500] font-medium text-xs transition-colors">Cookies</Link>
+              <Link href="#" className="text-zinc-500 hover:text-primary font-medium text-xs transition-colors">Privacy Policy</Link>
+              <Link href="#" className="text-zinc-500 hover:text-primary font-medium text-xs transition-colors">Terms of Service</Link>
+              <Link href="#" className="text-zinc-500 hover:text-primary font-medium text-xs transition-colors">Cookies</Link>
             </div>
           </div>
 
