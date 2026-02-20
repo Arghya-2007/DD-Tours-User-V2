@@ -1,368 +1,602 @@
 "use client";
 
-import { useEffect, useState, useRef, useLayoutEffect } from "react";
-import { useParams, useRouter, usePathname } from "next/navigation";
+import {useEffect, useState, useRef} from "react";
+import {useParams, useRouter, usePathname} from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import gsap from "gsap";
+import {ScrollTrigger} from "gsap/ScrollTrigger";
+import {useGSAP} from "@gsap/react";
 import {
-  MapPin, Calendar, Clock, Loader2, Compass, AlertTriangle,
-  IndianRupee, Users, CheckCircle, ShieldCheck, ArrowLeft, ChevronRight, ChevronLeft
+    MapPin, Calendar, Clock, Loader2, Compass, AlertTriangle,
+    IndianRupee, Users, CheckCircle, ShieldCheck, ArrowLeft, ArrowRight,
+    Sparkles, ChevronRight, Eye, MessageCircle, ChevronDown, ChevronUp, Map
 } from "lucide-react";
-import { api } from "@/lib/axios";
+import {api} from "@/lib/axios";
 
-gsap.registerPlugin(ScrollTrigger);
+if (typeof window !== "undefined") {
+    gsap.registerPlugin(ScrollTrigger);
+}
 
-// 🛡️ Exact match to your Prisma Tour Model
 interface Tour {
-  tourId: string;
-  tourTitle: string;
-  slug: string;
-  tourDuration: string;
-  tourDescription: string;
-  tourPrice: number;
-  startLocation?: string | null;
-  tourCategory?: string | null;
-  isFixedDate: boolean;
-  fixedDate?: string | null;
-  bookingDeadline?: string | null;
-  expectedMonth?: string | null;
-  coveredPlaces: string[];
-  includedItems: string[];
-  images: string[];
-  tourStatus: string;
-  maxSeats: number;
-  availableSeats: number;
+    tourId: string;
+    tourTitle: string;
+    slug: string;
+    tourDuration: string;
+    tourDescription: string;
+    tourPrice: number;
+    startLocation?: string | null;
+    tourCategory?: string | null;
+    isFixedDate: boolean;
+    fixedDate?: string | null;
+    bookingDeadline?: string | null;
+    expectedMonth?: string | null;
+    coveredPlaces: string[];
+    includedItems: string[];
+    images: string[];
+    tourStatus: string;
+    maxSeats: number;
+    availableSeats: number;
 }
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000&auto=format&fit=crop";
 
 export default function TourDetailsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const pathname = usePathname();
+    const params = useParams();
+    const router = useRouter();
+    const pathname = usePathname();
 
-  // 🚨 FIX 1: Safely grab the slug whether the folder is [slug] or [id]
-  const urlSlug = pathname.split("/")[2];
-  const slugToFetch = (params?.slug || params?.id || urlSlug) as string;
+    const urlSlug = pathname.split("/")[2];
+    const slugToFetch = (params?.slug || params?.id || urlSlug) as string;
 
-  const [tour, setTour] = useState<Tour | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeImg, setActiveImg] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+    const [tour, setTour] = useState<Tour | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  // 1. Fetch Tour Details
-  useEffect(() => {
-    // 🚨 FIX 2: Do NOT fetch if the slug is missing or "undefined"
-    if (!slugToFetch || slugToFetch === "undefined") return;
+    const [viewers, setViewers] = useState(0);
+    const [isDescExpanded, setIsDescExpanded] = useState(false);
 
-    const fetchTour = async () => {
-      try {
-        const { data } = await api.get(`/tours/${slugToFetch}`);
-        setTour(data.data);
-      } catch (err) {
-        console.error("Failed to fetch tour", err);
-      } finally {
-        setLoading(false);
-      }
+    const containerRef = useRef<HTMLDivElement>(null);
+    const sidebarRef = useRef<HTMLDivElement>(null);
+
+    // 1. Fetch Tour Details
+    useEffect(() => {
+        if (!slugToFetch || slugToFetch === "undefined") return;
+
+        setViewers(Math.floor(Math.random() * (35 - 8 + 1) + 8));
+
+        const fetchTour = async () => {
+            try {
+                const {data} = await api.get(`/tours/${slugToFetch}`);
+                setTour(data.data);
+            } catch (err) {
+                console.error("Failed to fetch tour", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTour();
+    }, [slugToFetch]);
+
+    // 2. THE "CRAZY" GSAP ORCHESTRATION
+    useGSAP(() => {
+        if (loading || !tour || !containerRef.current) return;
+
+        const customScroller = document.querySelector("#main-scroll-container");
+        const scrollerTarget = customScroller || window;
+
+        // --- MULTI-STATE CINEMATIC IMAGE TRANSITIONS ---
+        const images = gsap.utils.toArray(".hero-auto-slide") as HTMLElement[];
+        if (images.length > 1) {
+
+            // Initial State: Hide all except first
+            gsap.set(images, {opacity: 0, zIndex: 0});
+            gsap.set(images[0], {opacity: 1, zIndex: 1});
+
+            let currentIndex = 0;
+            const displayDuration = 3.5;
+            const transitionDuration = 1.6;
+
+            const playNextImage = () => {
+                const nextIndex = (currentIndex + 1) % images.length;
+                const currentImg = images[currentIndex];
+                const nextImg = images[nextIndex];
+
+                const fadeTl = gsap.timeline({
+                    onComplete: () => {
+                        gsap.set(currentImg, {opacity: 0}); // Clean up old image
+                        currentIndex = nextIndex;
+                        setTimeout(playNextImage, displayDuration * 1000);
+                    }
+                });
+
+                gsap.set(nextImg, {zIndex: 2, opacity: 1});
+                gsap.set(currentImg, {zIndex: 1});
+
+                // Choose a crazy transition based on the index!
+                const animType = nextIndex % 3;
+
+                if (animType === 0) {
+                    // 💥 1. THE CYBER SLICE (Angled Blade Wipe)
+                    fadeTl.fromTo(nextImg,
+                        {
+                            clipPath: "polygon(0% 0%, 0% 0%, -20% 100%, -20% 100%)",
+                            scale: 1.5,
+                            filter: "brightness(2) contrast(1.5)"
+                        },
+                        {
+                            clipPath: "polygon(0% 0%, 150% 0%, 150% 100%, -20% 100%)",
+                            scale: 1,
+                            filter: "brightness(1) contrast(1)",
+                            duration: transitionDuration,
+                            ease: "expo.inOut"
+                        }, 0
+                    )
+                        .to(currentImg, {
+                            scale: 0.8,
+                            x: -50,
+                            filter: "blur(10px)",
+                            duration: transitionDuration,
+                            ease: "expo.inOut"
+                        }, 0);
+                } else if (animType === 1) {
+                    // 💥 2. THE VERTICAL BLAST (CRT Monitor Turn-on)
+                    fadeTl.fromTo(nextImg,
+                        {clipPath: "inset(50% 0% 50% 0%)", scale: 2, filter: "brightness(3)"},
+                        {
+                            clipPath: "inset(0% 0% 0% 0%)",
+                            scale: 1,
+                            filter: "brightness(1)",
+                            duration: transitionDuration,
+                            ease: "power4.inOut"
+                        }, 0
+                    )
+                        .to(currentImg, {
+                            scale: 0.5,
+                            rotationZ: 5,
+                            filter: "blur(20px)",
+                            duration: transitionDuration,
+                            ease: "power4.inOut"
+                        }, 0);
+                } else {
+                    // 💥 3. THE LENS SNAP (Circular Spin Reveal)
+                    fadeTl.fromTo(nextImg,
+                        {
+                            clipPath: "circle(0% at 50% 50%)",
+                            scale: 1.8,
+                            rotationZ: -10,
+                            filter: "saturate(3) hue-rotate(90deg)"
+                        },
+                        {
+                            clipPath: "circle(150% at 50% 50%)",
+                            scale: 1,
+                            rotationZ: 0,
+                            filter: "saturate(1) hue-rotate(0deg)",
+                            duration: transitionDuration,
+                            ease: "expo.inOut"
+                        }, 0
+                    )
+                        .to(currentImg, {scale: 1.2, duration: transitionDuration, ease: "expo.inOut"}, 0);
+                }
+            };
+
+            const slideTimer = setTimeout(playNextImage, displayDuration * 1000);
+            return () => clearTimeout(slideTimer);
+        }
+
+        // --- WILD CONTENT REVEALS ---
+
+        // Stats Drop in with extreme elasticity and randomized rotation
+        gsap.fromTo(".stat-card",
+            {y: -80, opacity: 0, rotationZ: () => Math.random() * 20 - 10, scale: 0.5},
+            {
+                y: 0,
+                opacity: 1,
+                rotationZ: 0,
+                scale: 1,
+                duration: 1.2,
+                stagger: 0.1,
+                ease: "elastic.out(1, 0.5)",
+                scrollTrigger: {trigger: ".stats-grid", scroller: scrollerTarget, start: "top 85%"}
+            }
+        );
+
+        // Blocks 3D flip up
+        gsap.utils.toArray(".content-block").forEach((block: any) => {
+            gsap.fromTo(block as HTMLElement,
+                {y: 80, opacity: 0, rotationX: 45, transformOrigin: "50% 100%"},
+                {
+                    y: 0,
+                    opacity: 1,
+                    rotationX: 0,
+                    duration: 1.2,
+                    ease: "power3.out",
+                    scrollTrigger: {trigger: block as HTMLElement, scroller: scrollerTarget, start: "top 85%"}
+                }
+            );
+        });
+
+        // Pills pop out like explosions
+        gsap.fromTo(".pop-pill",
+            {scale: 0, opacity: 0, rotationZ: 45},
+            {
+                scale: 1,
+                opacity: 1,
+                rotationZ: 0,
+                duration: 0.6,
+                stagger: 0.05,
+                ease: "back.out(2.5)",
+                scrollTrigger: {trigger: ".places-container", scroller: scrollerTarget, start: "top 85%"}
+            }
+        );
+
+        gsap.fromTo(".booking-card",
+            {x: 100, opacity: 0, rotationY: -30, scale: 0.9},
+            {
+                x: 0,
+                opacity: 1,
+                rotationY: 0,
+                scale: 1,
+                duration: 1.2,
+                delay: 0.2,
+                ease: "expo.out",
+                scrollTrigger: {trigger: ".booking-card", scroller: scrollerTarget, start: "top 90%"}
+            }
+        );
+
+        // Ambient Background Pulse
+        gsap.to(".bg-glow", {scale: 1.2, opacity: 0.8, duration: 4, repeat: -1, yoyo: true, ease: "sine.inOut"});
+
+    }, {scope: containerRef, dependencies: [loading, tour]});
+
+    // --- UNIVERSAL 3D HOVER PHYSICS ---
+    const handle3DHover = (e: React.MouseEvent<HTMLElement>, strength: number = 10) => {
+        const el = e.currentTarget;
+        const rect = el.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+
+        gsap.to(el, {
+            rotationY: (x / rect.width) * strength,
+            rotationX: -(y / rect.height) * strength,
+            duration: 0.4,
+            ease: "power2.out",
+            transformPerspective: 800, // Deep perspective for pop
+        });
     };
 
-    fetchTour();
-  }, [slugToFetch]); // Depend on slugToFetch instead of params.slug
-
-  // 2. Auto Image Slider Logic
-  useEffect(() => {
-    if (!tour || !tour.images || tour.images.length <= 1) return;
-    const interval = setInterval(() => {
-      setActiveImg((prev) => (prev + 1) % tour.images.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [tour]);
-
-  // 3. Reveal Animations
-  useLayoutEffect(() => {
-    if (!loading && tour) {
-      const ctx = gsap.context(() => {
-        gsap.from(".reveal-up", {
-          y: 40, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power3.out"
+    const handle3DLeave = (e: React.MouseEvent<HTMLElement>) => {
+        gsap.to(e.currentTarget, {
+            rotationY: 0,
+            rotationX: 0,
+            duration: 0.8,
+            ease: "elastic.out(1, 0.5)",
         });
-        gsap.from(".sidebar-anim", {
-          x: 40, opacity: 0, duration: 0.8, delay: 0.3, ease: "power3.out"
-        });
-      }, containerRef);
-      return () => ctx.revert();
+    };
+
+    // Helper Functions
+    const getDaysLeft = (deadline?: string | null) => {
+        if (!deadline) return null;
+        const days = Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+        return days < 0 ? "CLOSED" : `${days} Days Left`;
+    };
+
+    const getFormattedDate = (dateString?: string | null) => {
+        if (!dateString) return null;
+        return new Date(dateString).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+    };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col justify-center items-center h-screen bg-background">
+                <Loader2 size={48} className="text-orange-500 animate-spin mb-4"/>
+                <div className="text-orange-500 text-sm font-bold uppercase tracking-widest animate-pulse">
+                    Loading Destination...
+                </div>
+            </div>
+        );
     }
-  }, [loading, tour]);
 
-  // Helper Functions
-  const getDaysLeft = (deadline?: string | null) => {
-    if (!deadline) return null;
-    const days = Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-    return days < 0 ? "CLOSED" : `${days} DAYS LEFT`;
-  };
-
-  const getFormattedDate = (dateString?: string | null) => {
-    if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-[80vh]">
-        <Loader2 className="animate-spin text-orange-600 w-12 h-12" />
-      </div>
-    );
-  }
-
-  if (!tour) {
-    return (
-      <div className="text-center py-32">
-        <Compass size={48} className="mx-auto text-zinc-700 mb-6" />
-        <h2 className="text-3xl font-black text-white mb-4 uppercase">Mission Not Found</h2>
-        <Link href="/tours" className="px-8 py-3 bg-orange-600 rounded-full text-white font-bold uppercase text-sm hover:bg-orange-700 transition-colors">Return to Archive</Link>
-      </div>
-    );
-  }
-
-  const images = tour.images?.length > 0 ? tour.images : [FALLBACK_IMAGE];
-  const daysLeft = getDaysLeft(tour.bookingDeadline);
-  const isUrgent = daysLeft && !daysLeft.includes("CLOSED") && parseInt(daysLeft) < 15;
-  const isSoldOut = tour.availableSeats <= 0;
-
-  return (
-    <div ref={containerRef} className="pb-32 md:pb-24 w-full max-w-full overflow-hidden">
-
-      {/* 🔙 Back Button */}
-      <button
-        onClick={() => router.back()}
-        className="fixed top-24 left-4 md:left-8 z-50 bg-black/50 backdrop-blur-md p-3 rounded-full text-white hover:bg-orange-600 transition-all border border-white/10 hidden xl:flex shadow-2xl"
-      >
-        <ArrowLeft size={24} />
-      </button>
-
-      {/* 🖼️ HERO IMAGE SLIDER */}
-      <div className="relative w-full h-[50vh] md:h-[70vh] rounded-b-[40px] md:rounded-3xl overflow-hidden mb-12 bg-[#0a0a0a]">
-        {images.map((img, index) => (
-            <Image
-                key={index}
-                src={img}
-                alt={`${tour.tourTitle} - Image ${index + 1}`}
-                fill
-                priority={index === 0}
-                className={`object-cover transition-opacity duration-1000 ease-in-out ${index === activeImg ? 'opacity-100' : 'opacity-0'}`}
-            />
-        ))}
-        {/* Gradients for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/60 to-transparent" />
-
-        {/* Manual Slider Controls (Only if >1 image) */}
-        {images.length > 1 && (
-            <div className="absolute bottom-6 right-6 z-30 flex gap-2">
-                <button onClick={() => setActiveImg((prev) => (prev === 0 ? images.length - 1 : prev - 1))} className="p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-orange-600 transition-colors">
-                    <ChevronLeft size={20} />
-                </button>
-                <button onClick={() => setActiveImg((prev) => (prev + 1) % images.length)} className="p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-orange-600 transition-colors">
-                    <ChevronRight size={20} />
-                </button>
-            </div>
-        )}
-
-        {/* Dots Indicator */}
-        {images.length > 1 && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
-                {images.map((_, idx) => (
-                    <div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === activeImg ? 'w-8 bg-orange-500' : 'w-2 bg-white/50'}`} />
-                ))}
-            </div>
-        )}
-
-        {/* Hero Content Overlay */}
-        <div className="absolute bottom-0 left-0 w-full p-6 md:p-16 z-20">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                    <div className="flex flex-wrap items-center gap-3 mb-4">
-                        <span className="bg-orange-600/90 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-xs font-black uppercase tracking-widest border border-orange-500/50 shadow-lg">
-                            {tour.tourCategory || "EXPEDITION"}
-                        </span>
-                        {tour.startLocation && (
-                            <span className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-xs font-bold uppercase tracking-wider border border-white/10">
-                                <MapPin size={14} className="text-orange-500" /> Starts: {tour.startLocation}
-                            </span>
-                        )}
-                    </div>
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] uppercase drop-shadow-2xl">
-                        {tour.tourTitle}
-                    </h1>
-                </div>
-            </div>
+    if (!tour) return (
+        <div className="text-center py-40 h-screen flex flex-col items-center justify-center bg-background">
+            <Map size={64} className="text-zinc-700 mb-6"/>
+            <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tight">Tour Not Found</h2>
+            <Link href="/tours"
+                  className="px-10 py-4 bg-white/10 rounded-full text-white font-bold uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
+                Browse All Tours
+            </Link>
         </div>
-      </div>
+    );
 
-      {/* 📄 MAIN CONTENT SPLIT */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-3 gap-12">
+    const images = tour.images?.length > 0 ? tour.images : [FALLBACK_IMAGE];
+    const daysLeft = getDaysLeft(tour.bookingDeadline);
+    const isUrgent = daysLeft && !daysLeft.includes("CLOSED") && parseInt(daysLeft) < 15;
+    const isSoldOut = tour.availableSeats <= 0;
 
-        {/* LEFT COLUMN: Details (2/3 width) */}
-        <div className="lg:col-span-2 space-y-12">
+    const allParagraphs = tour.tourDescription.split('\n').filter(p => p.trim());
+    const showReadMore = allParagraphs.length > 2;
+    const visibleParagraphs = isDescExpanded ? allParagraphs : allParagraphs.slice(0, 2);
 
-            {/* Quick Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 reveal-up">
-                <div className="bg-[#111] border border-white/5 p-4 rounded-2xl flex flex-col items-center text-center gap-2">
-                    <Clock size={24} className="text-orange-500" />
-                    <span className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Duration</span>
-                    <span className="text-white font-bold">{tour.tourDuration}</span>
-                </div>
-                <div className="bg-[#111] border border-white/5 p-4 rounded-2xl flex flex-col items-center text-center gap-2">
-                    <Users size={24} className="text-blue-500" />
-                    <span className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Group Size</span>
-                    <span className="text-white font-bold">Max {tour.maxSeats} Pax</span>
-                </div>
-                <div className="bg-[#111] border border-white/5 p-4 rounded-2xl flex flex-col items-center text-center gap-2">
-                    <Compass size={24} className="text-emerald-500" />
-                    <span className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Tour Type</span>
-                    <span className="text-white font-bold">{tour.isFixedDate ? "Fixed Departure" : "Flexible Dates"}</span>
-                </div>
-                <div className="bg-[#111] border border-white/5 p-4 rounded-2xl flex flex-col items-center text-center gap-2">
-                    <ShieldCheck size={24} className="text-purple-500" />
-                    <span className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Status</span>
-                    <span className="text-white font-bold">{tour.tourStatus}</span>
-                </div>
-            </div>
+    const whatsappNumber = "+919876543210";
+    const whatsappMessage = encodeURIComponent(`Hi DD Tours! I am looking at the "${tour.tourTitle}" package. Can you share a few more details?`);
+    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
 
-            {/* Mission Brief (Description) */}
-            <div className="reveal-up bg-[#111] border border-white/5 rounded-3xl p-6 md:p-8">
-                <h2 className="text-2xl font-black text-white uppercase tracking-wide mb-6 flex items-center gap-3">
-                    <span className="w-2 h-8 bg-orange-600 rounded-full" /> Mission Brief
-                </h2>
-                <div className="prose prose-invert max-w-none text-zinc-300 leading-relaxed text-lg">
-                    {/* Splits by newline and renders paragraphs */}
-                    {tour.tourDescription.split('\n').map((paragraph, idx) => (
-                        paragraph.trim() ? <p key={idx} className="mb-4">{paragraph}</p> : null
+    return (
+        <div ref={containerRef}
+             className="pb-20 md:pb-32 w-full bg-[#050505] text-white relative selection:bg-orange-600 selection:text-white overflow-hidden perspective-[1000px]">
+
+            {/* Ambient Background Glows */}
+            <div
+                className="bg-glow absolute top-[10%] left-[-10%] w-[50vw] h-[50vw] bg-orange-600/15 blur-[150px] rounded-full pointer-events-none mix-blend-screen z-0"></div>
+
+            {/* ==================================================== */}
+            {/* 🖼️ HERO GALLERY (Crazy 3-State GSAP Transitions)       */}
+            {/* ==================================================== */}
+            <div
+                onMouseMove={(e) => handle3DHover(e, 3)}
+                onMouseLeave={handle3DLeave}
+                className="relative w-full h-[65svh] md:h-[80vh] bg-black overflow-hidden rounded-b-[2rem] md:rounded-b-[4rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-10 cursor-default"
+            >
+                <button
+                    onClick={() => router.back()}
+                    className="absolute top-6 left-4 md:top-10 md:left-10 z-[100] bg-black/40 backdrop-blur-md px-5 py-3 rounded-full text-zinc-200 font-bold text-xs uppercase tracking-widest border border-white/10 hover:border-orange-500 hover:text-orange-500 transition-all active:scale-95 flex items-center gap-2"
+                >
+                    <ArrowLeft size={16}/> Back
+                </button>
+
+                {/* GSAP Managed Image Container */}
+                <div className="absolute inset-0 w-full h-full opacity-90 pointer-events-none">
+                    {images.map((img, index) => (
+                        <div key={`hero-img-${index}`} className="hero-auto-slide absolute inset-0 w-full h-full">
+                            <Image src={img} alt={`${tour.tourTitle} Image ${index + 1}`} fill priority={index === 0}
+                                   className="object-cover"/>
+                        </div>
                     ))}
                 </div>
-            </div>
 
-            {/* Coordinates / Places Covered */}
-            {tour.coveredPlaces && tour.coveredPlaces.length > 0 && (
-                <div className="reveal-up">
-                    <h2 className="text-2xl font-black text-white uppercase tracking-wide mb-6 flex items-center gap-3">
-                        <span className="w-2 h-8 bg-orange-600 rounded-full" /> Coordinates Covered
-                    </h2>
-                    <div className="flex flex-wrap gap-3">
-                        {tour.coveredPlaces.map((place, i) => (
-                            <div key={i} className="bg-[#141414] border border-white/10 px-5 py-3 rounded-xl flex items-center gap-2 text-zinc-300 font-medium hover:border-orange-500/50 transition-colors">
-                                <MapPin size={16} className="text-orange-600" /> {place}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                <div
+                    className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent z-[50] pointer-events-none"/>
+                <div
+                    className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent z-[50] md:block hidden pointer-events-none"/>
 
-            {/* Included Provisions */}
-            {tour.includedItems && tour.includedItems.length > 0 && (
-                <div className="reveal-up bg-[#111] border border-white/5 rounded-3xl p-6 md:p-8">
-                    <h2 className="text-2xl font-black text-white uppercase tracking-wide mb-6 flex items-center gap-3">
-                        <span className="w-2 h-8 bg-orange-600 rounded-full" /> Provisions Included
-                    </h2>
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {tour.includedItems.map((item, i) => (
-                            <li key={i} className="flex items-start gap-3 text-zinc-300">
-                                <CheckCircle size={20} className="text-emerald-500 shrink-0 mt-0.5" />
-                                <span>{item}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-        </div>
-
-        {/* RIGHT COLUMN: Sticky Booking Sidebar (Hidden on mobile) */}
-        <div className="hidden lg:block sidebar-anim relative">
-            <div className="sticky top-28 bg-[#141414] border border-white/10 rounded-3xl p-8 shadow-2xl">
-
-                {/* Price Section */}
-                <div className="mb-8 border-b border-white/10 pb-8">
-                    <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest block mb-2">Total Investment</span>
-                    <div className="flex items-end gap-2 text-white">
-                        <IndianRupee size={36} className="text-orange-500 mb-1" />
-                        <span className="text-5xl font-black tracking-tighter">{tour.tourPrice?.toLocaleString("en-IN")}</span>
-                        <span className="text-zinc-500 font-medium mb-1.5">/ person</span>
-                    </div>
-                </div>
-
-                {/* Logistics */}
-                <div className="space-y-6 mb-8">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-orange-500">
-                            <Calendar size={20} />
-                        </div>
-                        <div>
-                            <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-1">Schedule</p>
-                            {tour.isFixedDate && tour.fixedDate ? (
-                                <p className="text-white font-bold">{getFormattedDate(tour.fixedDate)}</p>
-                            ) : (
-                                <p className="text-white font-bold">{tour.expectedMonth ? `${tour.expectedMonth} (Flexible)` : 'Flexible Dates'}</p>
+                <div className="absolute bottom-0 left-0 w-full p-6 md:p-16 z-[60] pb-10 md:pb-16 pointer-events-none">
+                    <div className="max-w-7xl mx-auto flex flex-col justify-end">
+                        <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-4 md:mb-6 pointer-events-auto">
+                            <span
+                                className="bg-orange-600/80 backdrop-blur-md px-4 py-2 rounded-full text-white text-[10px] md:text-xs font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(234,88,12,0.4)]">
+                                {tour.tourCategory || "Tour Package"}
+                            </span>
+                            {tour.startLocation && (
+                                <span
+                                    className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-zinc-200 text-[10px] md:text-xs font-bold uppercase tracking-widest border border-white/20 flex items-center gap-1.5 shadow-lg">
+                                    <MapPin size={14} className="text-orange-500"/> Starts From: {tour.startLocation}
+                                </span>
                             )}
                         </div>
+                        <h1 className="text-5xl md:text-7xl lg:text-[6.5rem] font-black text-white leading-[1] md:leading-[0.9] uppercase drop-shadow-2xl tracking-tighter">
+                            {tour.tourTitle}
+                        </h1>
+                    </div>
+                </div>
+            </div>
+
+            {/* ==================================================== */}
+            {/* 📄 MAIN CONTENT SPLIT                                */}
+            {/* ==================================================== */}
+            <div
+                className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 mt-12 md:mt-24 relative z-10 perspective-[1000px]">
+
+                {/* LEFT COLUMN: Details */}
+                <div className="lg:col-span-7 xl:col-span-8 space-y-12 md:space-y-16">
+
+                    {/* Stats Grid (3D Hover applied to each) */}
+                    <div className="stats-grid grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        {[
+                            {icon: Clock, label: "Duration", val: tour.tourDuration, color: "text-orange-500"},
+                            {icon: Users, label: "Group Size", val: `Max ${tour.maxSeats}`, color: "text-blue-500"},
+                            {
+                                icon: Compass,
+                                label: "Tour Type",
+                                val: tour.isFixedDate ? "Fixed Date" : "Flexible",
+                                color: "text-emerald-500"
+                            },
+                            {icon: ShieldCheck, label: "Status", val: tour.tourStatus, color: "text-purple-500"}
+                        ].map((stat, i) => (
+                            <div
+                                key={i}
+                                onMouseMove={(e) => handle3DHover(e, 25)}
+                                onMouseLeave={handle3DLeave}
+                                className="stat-card bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded-3xl flex flex-col items-center text-center gap-2 hover:bg-white/10 transition-colors shadow-lg cursor-default"
+                            >
+                                <stat.icon size={28} className={stat.color}/>
+                                <span
+                                    className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{stat.label}</span>
+                                <span className="text-white font-black text-sm md:text-base">{stat.val}</span>
+                            </div>
+                        ))}
                     </div>
 
-                    {daysLeft && (
-                        <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isUrgent ? 'bg-red-500/10 text-red-500' : 'bg-white/5 text-zinc-400'}`}>
-                                <AlertTriangle size={20} />
-                            </div>
-                            <div>
-                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-1">Registration Closes</p>
-                                <p className={`font-bold ${isUrgent ? 'text-red-400' : 'text-white'}`}>{getFormattedDate(tour.bookingDeadline)}</p>
+                    {/* Tour Overview */}
+                    <div
+                        className="content-block desc-container relative bg-[#111]/50 border border-white/5 p-6 md:p-10 rounded-[2rem] shadow-2xl">
+                        <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-8 flex items-center gap-4">
+                            <span
+                                className="w-1.5 h-8 bg-orange-600 rounded-full shadow-[0_0_15px_rgba(234,88,12,0.8)]"/>
+                            Tour Overview
+                        </h2>
+
+                        <div
+                            className="prose prose-invert max-w-none text-zinc-300 font-medium leading-relaxed text-base md:text-lg relative">
+                            {visibleParagraphs.map((paragraph, idx) => (
+                                <p key={idx} className="mb-5">{paragraph}</p>
+                            ))}
+                            {!isDescExpanded && showReadMore && (
+                                <div
+                                    className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none"></div>
+                            )}
+                        </div>
+
+                        {showReadMore && (
+                            <button onClick={() => setIsDescExpanded(!isDescExpanded)}
+                                    className="mt-4 flex items-center justify-center w-full md:w-auto gap-2 text-orange-500 font-bold uppercase tracking-widest text-xs hover:text-white transition-colors bg-white/5 px-6 py-3.5 rounded-xl border border-white/10 hover:border-orange-500/50 shadow-lg">
+                                {isDescExpanded ? <><ChevronUp size={16}/> Show Less</> : <><ChevronDown
+                                    size={16}/> Read Full Overview</>}
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Places Covered */}
+                    {tour.coveredPlaces && tour.coveredPlaces.length > 0 && (
+                        <div className="content-block places-container relative">
+                            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-8 flex items-center gap-4">
+                                <span
+                                    className="w-1.5 h-8 bg-orange-600 rounded-full shadow-[0_0_15px_rgba(234,88,12,0.8)]"/>
+                                Places You'll Visit
+                            </h2>
+                            <div className="flex flex-wrap gap-3">
+                                {tour.coveredPlaces.map((place, i) => (
+                                    <div
+                                        key={i}
+                                        onMouseMove={(e) => handle3DHover(e, 30)}
+                                        onMouseLeave={handle3DLeave}
+                                        className="pop-pill bg-white/5 border border-white/10 px-5 py-3 rounded-xl flex items-center gap-2.5 text-zinc-200 text-sm font-bold tracking-wide shadow-lg hover:border-orange-500/50 cursor-default"
+                                    >
+                                        <MapPin size={16} className="text-orange-500"/> {place}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
 
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-emerald-500">
-                            <Users size={20} />
+                    {/* What's Included */}
+                    {tour.includedItems && tour.includedItems.length > 0 && (
+                        <div
+                            className="content-block places-container relative bg-[#111]/50 border border-white/5 rounded-[2rem] p-6 md:p-10 shadow-2xl">
+                            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-8 flex items-center gap-4">
+                                <span
+                                    className="w-1.5 h-8 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.8)]"/>
+                                What's Included
+                            </h2>
+
+                            <ul className="flex flex-wrap gap-3">
+                                {tour.includedItems.map((item, i) => (
+                                    <li
+                                        key={i}
+                                        onMouseMove={(e) => handle3DHover(e, 30)}
+                                        onMouseLeave={handle3DLeave}
+                                        className="pop-pill flex items-center gap-2.5 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2.5 rounded-full font-bold tracking-wide text-emerald-400 text-sm shadow-lg cursor-default"
+                                    >
+                                        <CheckCircle size={16} className="shrink-0"/>
+                                        <span>{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                        <div>
-                            <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-1">Availability</p>
-                            <p className="text-white font-bold">
-                                {isSoldOut ? <span className="text-red-500">SOLD OUT</span> : `${tour.availableSeats} Slots Remaining`}
-                            </p>
+                    )}
+                </div>
+
+                {/* RIGHT COLUMN: Interactive 3D Booking Card */}
+                <div className="lg:col-span-5 xl:col-span-4 relative mt-4 lg:mt-0 z-50">
+                    <div
+                        ref={sidebarRef}
+                        onMouseMove={(e) => handle3DHover(e, 15)}
+                        onMouseLeave={handle3DLeave}
+                        className="booking-card lg:sticky lg:top-32 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden transition-shadow hover:shadow-[0_30px_80px_rgba(234,88,12,0.15)]"
+                    >
+
+                        {/* Live Social Proof Badge */}
+                        <div
+                            className="bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2 mb-8 flex items-center gap-2.5 relative z-10 w-max">
+                            <div className="relative flex items-center justify-center">
+                                <span
+                                    className="absolute w-full h-full bg-red-500 rounded-full animate-ping opacity-40"></span>
+                                <Eye size={14} className="text-red-500 relative z-10"/>
+                            </div>
+                            <span
+                                className="text-red-300 text-[10px] font-bold uppercase tracking-widest leading-none mt-0.5">
+                                {viewers} People viewing
+                            </span>
+                        </div>
+
+                        {/* Price Section */}
+                        <div className="mb-8 border-b border-white/10 pb-8 relative z-10">
+                            <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest block mb-2">Total Price</span>
+                            <div className="flex items-end gap-1 text-white">
+                                <IndianRupee size={28} className="text-orange-500 mb-1"/>
+                                <span
+                                    className="text-5xl font-black tracking-tighter leading-none">{tour.tourPrice?.toLocaleString("en-IN")}</span>
+                            </div>
+                            <span className="text-zinc-500 text-[11px] font-medium mt-2 block tracking-wide">Per person, including taxes.</span>
+                        </div>
+
+                        {/* Logistics */}
+                        <div className="space-y-6 mb-10 relative z-10">
+                            <div className="flex items-center gap-4">
+                                <div
+                                    className="w-12 h-12 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center text-orange-500 shadow-inner">
+                                    <Calendar size={20}/>
+                                </div>
+                                <div>
+                                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">Departure
+                                        Date</p>
+                                    <p className="text-white font-bold text-sm tracking-wide">
+                                        {tour.isFixedDate && tour.fixedDate ? getFormattedDate(tour.fixedDate) : tour.expectedMonth ? `${tour.expectedMonth} (Flexible)` : 'Flexible Dates'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {daysLeft && (
+                                <div className="flex items-center gap-4">
+                                    <div
+                                        className={`w-12 h-12 rounded-xl border flex items-center justify-center shadow-inner ${isUrgent ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-black/40 border-white/5 text-zinc-400'}`}>
+                                        <AlertTriangle size={20}/>
+                                    </div>
+                                    <div>
+                                        <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">Booking
+                                            Closes</p>
+                                        <p className={`font-bold text-sm tracking-wide ${isUrgent ? 'text-red-400' : 'text-white'}`}>{getFormattedDate(tour.bookingDeadline)}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex items-center gap-4">
+                                <div
+                                    className="w-12 h-12 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center text-emerald-500 shadow-inner">
+                                    <Users size={20}/>
+                                </div>
+                                <div>
+                                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">Availability</p>
+                                    <p className="text-white font-bold text-sm tracking-wide">
+                                        {isSoldOut ? <span
+                                            className="text-red-500">Sold Out</span> : `${tour.availableSeats} Seats Left`}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="space-y-4 relative z-10">
+                            <button
+                                onClick={() => router.push(`/tours/${tour.slug}/book`)}
+                                disabled={isSoldOut || daysLeft === "CLOSED"}
+                                className="w-full py-5 bg-orange-600 disabled:bg-white/5 disabled:text-zinc-600 text-white font-black uppercase tracking-widest text-sm rounded-xl transition-all hover:bg-orange-500 active:scale-[0.98] flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(234,88,12,0.4)] disabled:shadow-none border border-transparent"
+                            >
+                                {isSoldOut ? "Tour Full" : daysLeft === "CLOSED" ? "Booking Closed" : "Proceed to Book"}
+                                {!isSoldOut && daysLeft !== "CLOSED" && <ArrowRight size={18}/>}
+                            </button>
+
+                            <a
+                                href={whatsappLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full py-4 bg-[#111] hover:bg-green-600/10 border border-white/10 hover:border-green-500/30 text-zinc-300 hover:text-green-400 font-bold uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center gap-2"
+                            >
+                                <MessageCircle size={16}/> Ask an Expert
+                            </a>
                         </div>
                     </div>
                 </div>
-
-                {/* Action Button */}
-                <button
-                    onClick={() => router.push(`/tours/${tour.slug}/book`)}
-                    disabled={isSoldOut || daysLeft === "CLOSED"}
-                    className="w-full py-4 bg-orange-600 hover:bg-orange-700 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-lg hover:shadow-orange-600/30 active:scale-95"
-                >
-                    {isSoldOut ? "Mission Full" : daysLeft === "CLOSED" ? "Registration Closed" : "Initiate Booking"}
-                </button>
             </div>
         </div>
-      </div>
-
-      {/* 📱 MOBILE FIXED BOTTOM ACTION BAR */}
-      <div className="lg:hidden fixed bottom-16 left-0 right-0 bg-[#0a0a0a]/90 backdrop-blur-xl border-t border-white/10 p-4 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-        <div className="flex items-center justify-between gap-4 max-w-md mx-auto">
-            <div>
-                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">Investment</p>
-                <div className="flex items-center text-white font-black text-xl leading-none">
-                    <IndianRupee size={16} className="text-orange-500" /> {tour.tourPrice?.toLocaleString("en-IN")}
-                </div>
-            </div>
-            <button
-                onClick={() => router.push(`/tours/${tour.slug}/book`)}
-                disabled={isSoldOut || daysLeft === "CLOSED"}
-                className="flex-1 py-3.5 bg-orange-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-black uppercase tracking-widest text-sm rounded-xl transition-all active:scale-95 text-center"
-            >
-                {isSoldOut ? "Full" : daysLeft === "CLOSED" ? "Closed" : "Book Now"}
-            </button>
-        </div>
-      </div>
-
-    </div>
-  );
+    );
 }

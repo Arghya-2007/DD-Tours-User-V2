@@ -1,11 +1,11 @@
 "use client";
 
-import { ReactLenis } from 'lenis/react';
+import {ReactLenis} from 'lenis/react';
 import gsap from 'gsap';
-import { useEffect, useRef } from 'react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import React, {useEffect, useRef} from 'react';
+import {ScrollTrigger} from 'gsap/ScrollTrigger';
 
-export function SmoothScroll({ children }: { children: React.ReactNode }) {
+export function SmoothScroll({children}: { children: React.ReactNode }) {
     const lenisRef = useRef<any>(null);
 
     useEffect(() => {
