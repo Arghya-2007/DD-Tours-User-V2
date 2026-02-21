@@ -9,7 +9,7 @@ import {ScrollTrigger} from "gsap/ScrollTrigger";
 import {useGSAP} from "@gsap/react";
 import {
     Calendar, User, ArrowLeft, Loader2, Youtube, Facebook,
-    MonitorPlay, Radio, Fingerprint, Share2, Globe, Compass
+    MonitorPlay, Compass, Globe
 } from "lucide-react";
 import {api} from "@/lib/axios";
 
@@ -37,7 +37,7 @@ export default function SingleBlogPage() {
 
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLDivElement>(null);
-    const hasAnimated = useRef(false); // 🔥 The bulletproof animation lock
+    const hasAnimated = useRef(false);
 
     useEffect(() => {
         const fetchBlog = async () => {
@@ -53,67 +53,75 @@ export default function SingleBlogPage() {
         if (params.slug) fetchBlog();
     }, [params.slug]);
 
-    // 🎬 CINEMATIC GSAP ORCHESTRATION (Locked to run ONCE)
+    // 🎬 CINEMATIC GSAP ORCHESTRATION (Optimized for Load & Footer Fix)
     useGSAP(() => {
-        // Wait for data to load and ensure it hasn't animated yet
         if (loading || !blog || !containerRef.current || hasAnimated.current) return;
 
-        // Lock the gate!
         hasAnimated.current = true;
 
-        const customScroller = document.querySelector("#main-scroll-container");
-        const scrollerTarget = customScroller || window;
+        const timer = setTimeout(() => {
+            const customScroller = document.querySelector("#main-scroll-container");
+            const scrollerTarget = customScroller || window;
 
-        const tl = gsap.timeline();
+            const tl = gsap.timeline();
 
-        // 1. Hero Lens Focus Reveal
-        tl.fromTo(".hero-bg-img",
-            {scale: 1.2, filter: "blur(20px)", opacity: 0},
-            {scale: 1, filter: "blur(0px)", opacity: 0.8, duration: 1.5, ease: "power3.out"}
-        )
-            .fromTo(".hero-hud",
-                {y: -20, opacity: 0},
-                {y: 0, opacity: 1, duration: 0.8, ease: "power2.out"},
-                "-=1"
+            // 1. Hero Lens Focus Reveal
+            tl.fromTo(".hero-bg-img",
+                {scale: 1.2, filter: "blur(20px)", opacity: 0},
+                {scale: 1, filter: "blur(0px)", opacity: 0.8, duration: 1.5, ease: "power3.out"}
             )
-            .fromTo(".hero-title",
-                {y: 50, opacity: 0, rotationX: -20},
-                {y: 0, opacity: 1, rotationX: 0, duration: 1, ease: "expo.out", transformPerspective: 1000},
-                "-=0.8"
-            );
+                .fromTo(".hero-hud",
+                    {y: -20, opacity: 0},
+                    {y: 0, opacity: 1, duration: 0.8, ease: "power2.out"},
+                    "-=1"
+                )
+                .fromTo(".hero-title",
+                    {y: 50, opacity: 0, rotationX: -20},
+                    {y: 0, opacity: 1, rotationX: 0, duration: 1, ease: "expo.out", transformPerspective: 1000},
+                    "-=0.8"
+                );
 
-        // 2. Prose Content Scroll Reveals
-        const contentElements = gsap.utils.toArray(".blog-prose-content > *");
-        contentElements.forEach((el: any) => {
-            gsap.fromTo(el,
-                {y: 30, opacity: 0},
-                {
-                    y: 0, opacity: 1, duration: 0.8, ease: "power2.out",
-                    scrollTrigger: {
-                        trigger: el,
-                        scroller: scrollerTarget,
-                        start: "top 90%"
+            // 2. Prose Content Scroll Reveals
+            const contentElements = gsap.utils.toArray(".blog-prose-content > *");
+            contentElements.forEach((el: any) => {
+                gsap.fromTo(el,
+                    {y: 30, opacity: 0},
+                    {
+                        y: 0, opacity: 1, duration: 0.8, ease: "power2.out",
+                        scrollTrigger: {
+                            trigger: el,
+                            scroller: scrollerTarget,
+                            start: "top 90%"
+                        }
                     }
-                }
-            );
-        });
+                );
+            });
 
-        // 3. Video Fold-in
-        if (videoRef.current) {
-            gsap.fromTo(videoRef.current,
-                {y: 80, opacity: 0, rotationX: 20, scale: 0.95},
-                {
-                    y: 0,
-                    opacity: 1,
-                    rotationX: 0,
-                    scale: 1,
-                    duration: 1.2,
-                    ease: "back.out(1.2)",
-                    transformPerspective: 1000,
-                    scrollTrigger: {trigger: videoRef.current, scroller: scrollerTarget, start: "top 85%"}
-                }
-            );
-        }
+            // 3. Video Fold-in
+            if (videoRef.current) {
+                gsap.fromTo(videoRef.current,
+                    {y: 80, opacity: 0, rotationX: 20, scale: 0.95},
+                    {
+                        y: 0,
+                        opacity: 1,
+                        rotationX: 0,
+                        scale: 1,
+                        duration: 1.2,
+                        ease: "back.out(1.2)",
+                        transformPerspective: 1000,
+                        scrollTrigger: {trigger: videoRef.current, scroller: scrollerTarget, start: "top 85%"}
+                    }
+                );
+            }
+
+            // Refresh ScrollTrigger to ensure footer calculations are correct
+            if (typeof window !== "undefined") {
+                ScrollTrigger.refresh();
+            }
+
+        }, 100);
+
+        return () => clearTimeout(timer);
 
     }, {scope: containerRef, dependencies: [loading, blog]});
 
@@ -163,8 +171,8 @@ export default function SingleBlogPage() {
 
     if (!blog) return (
         <div className="text-center py-40 h-screen flex flex-col items-center justify-center bg-[#020202]">
-            <h2 className="font-heading text-4xl font-black text-white mb-6 uppercase tracking-widest">Story Not
-                Found</h2>
+            <h2 className="font-heading text-3xl md:text-4xl font-black text-white mb-6 uppercase tracking-widest">Story
+                Not Found</h2>
             <Link href="/blogs"
                   className="px-8 py-3 bg-white/10 rounded-full text-white font-mono uppercase text-xs tracking-widest hover:bg-orange-600 transition-all border border-white/10">
                 Back to Journals
@@ -176,14 +184,14 @@ export default function SingleBlogPage() {
         <article ref={containerRef}
                  className="pb-24 md:pb-32 bg-[#020202] text-white min-h-[100svh] selection:bg-orange-600">
 
-            {/* 🌐 TACTICAL GRID */}
+            {/* 🌐 TACTICAL GRID - Added will-change for performance */}
             <div
-                className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0 fixed"></div>
+                className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0 fixed will-change-transform"></div>
 
-            {/* 🔙 Floating Terminal Back Button */}
+            {/* 🔙 Floating Terminal Back Button - Adjusted for tablet visibility */}
             <button
                 onClick={() => router.back()}
-                className="fixed top-24 left-4 md:left-8 z-[100] bg-black/60 backdrop-blur-xl px-4 py-3 rounded-full text-zinc-300 font-mono text-[10px] uppercase tracking-[0.2em] border border-white/10 hover:border-orange-500 hover:text-orange-500 transition-all active:scale-95 hidden xl:flex items-center gap-2 shadow-[0_0_20px_rgba(0,0,0,0.8)]"
+                className="fixed top-20 left-4 md:top-24 md:left-8 z-[100] bg-black/60 backdrop-blur-xl px-4 py-2.5 md:py-3 rounded-full text-zinc-300 font-mono text-[9px] md:text-[10px] uppercase tracking-[0.2em] border border-white/10 hover:border-orange-500 hover:text-orange-500 transition-all active:scale-95 hidden md:flex items-center gap-2 shadow-[0_0_20px_rgba(0,0,0,0.8)]"
             >
                 <ArrowLeft size={14}/> Back
             </button>
@@ -198,6 +206,7 @@ export default function SingleBlogPage() {
                     src={blog.coverImage || "/placeholder-travel.jpg"}
                     alt={blog.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
                     className="hero-bg-img object-cover opacity-80"
                     priority
                 />
@@ -205,28 +214,29 @@ export default function SingleBlogPage() {
                 {/* Tactical Overlays */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/60 to-transparent"/>
                 <div
-                    className="absolute inset-0 bg-gradient-to-r from-[#020202]/80 via-[#020202]/20 to-transparent md:block hidden"/>
+                    className="absolute inset-0 bg-gradient-to-r from-[#020202]/80 via-[#020202]/20 to-transparent hidden md:block"/>
 
                 {/* Title Overlay */}
-                <div className="absolute bottom-0 left-0 w-full p-6 md:p-16 z-20">
+                <div className="absolute bottom-0 left-0 w-full p-5 sm:p-8 md:p-16 z-20">
                     <div className="max-w-4xl mx-auto">
                         <div
-                            className="hero-hud flex flex-wrap items-center gap-4 text-[10px] md:text-xs font-mono text-zinc-300 mb-6 uppercase tracking-[0.2em]">
+                            className="hero-hud flex flex-wrap items-center gap-2 sm:gap-4 text-[9px] md:text-xs font-mono text-zinc-300 mb-4 sm:mb-6 uppercase tracking-[0.2em]">
                             <span
-                                className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-md border border-white/10 shadow-lg">
-                                <Calendar size={14} className="text-orange-500"/>
+                                className="flex items-center gap-1.5 md:gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-md border border-white/10 shadow-lg">
+                                <Calendar size={12} className="text-orange-500 md:w-3.5 md:h-3.5"/>
                                 {new Date(blog.createdAt).toLocaleDateString('en-GB')}
                             </span>
                             {blog.author && (
                                 <span
-                                    className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-md border border-white/10 shadow-lg">
-                                    <User size={14} className="text-orange-500"/>
-                                    {blog.author.userName}
+                                    className="flex items-center gap-1.5 md:gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-md border border-white/10 shadow-lg">
+                                    <User size={12} className="text-orange-500 md:w-3.5 md:h-3.5"/>
+                                    <span className="truncate max-w-[120px] md:max-w-none">{blog.author.userName}</span>
                                 </span>
                             )}
                         </div>
 
-                        <h1 className="hero-title font-heading text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] md:leading-[1.05] tracking-tighter drop-shadow-[0_0_30px_rgba(0,0,0,1)]">
+                        {/* Responsive Fix: Text sizes and break-words */}
+                        <h1 className="hero-title font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] md:leading-[1.05] tracking-tighter drop-shadow-[0_0_30px_rgba(0,0,0,1)] break-words">
                             {blog.title}
                         </h1>
                     </div>
@@ -236,18 +246,18 @@ export default function SingleBlogPage() {
             {/* ==================================================== */}
             {/* 📄 CONTENT CONTAINER (Highly Readable Typography)      */}
             {/* ==================================================== */}
-            <div className="max-w-3xl mx-auto px-4 relative z-10">
+            <div className="max-w-3xl mx-auto px-5 md:px-4 relative z-10">
 
-                {/* Blog Body Text */}
+                {/* Blog Body Text - Responsive Prose Scaling */}
                 <div
                     dangerouslySetInnerHTML={{__html: blog.content}}
-                    className="blog-prose-content prose prose-lg md:prose-xl prose-invert max-w-none
+                    className="blog-prose-content prose prose-base sm:prose-lg md:prose-xl prose-invert max-w-none
             prose-headings:font-heading prose-headings:font-black prose-headings:tracking-tight prose-headings:text-white
             prose-p:text-zinc-300 prose-p:leading-[1.8] prose-p:font-medium
             prose-a:text-orange-500 prose-a:no-underline hover:prose-a:underline
-            prose-img:rounded-3xl prose-img:shadow-[0_20px_50px_rgba(0,0,0,0.5)] prose-img:border prose-img:border-white/5
+            prose-img:rounded-[1.5rem] md:prose-img:rounded-3xl prose-img:shadow-[0_20px_50px_rgba(0,0,0,0.5)] prose-img:border prose-img:border-white/5
             prose-strong:text-white prose-strong:font-bold
-            prose-blockquote:border-orange-500 prose-blockquote:bg-white/5 prose-blockquote:px-6 prose-blockquote:py-2 prose-blockquote:rounded-r-xl prose-blockquote:text-zinc-200 prose-blockquote:not-italic"
+            prose-blockquote:border-orange-500 prose-blockquote:bg-white/5 prose-blockquote:px-5 md:prose-blockquote:px-6 prose-blockquote:py-2 prose-blockquote:rounded-r-xl prose-blockquote:text-zinc-200 prose-blockquote:not-italic"
                 />
 
                 {/* ==================================================== */}
@@ -255,26 +265,28 @@ export default function SingleBlogPage() {
                 {/* ==================================================== */}
                 {blog.youtubeUrl && getYoutubeEmbedUrl(blog.youtubeUrl) && (
                     <div ref={videoRef} onMouseMove={(e) => handle3DHover(e, 3)} onMouseLeave={handle3DLeave}
-                         className="mt-20 mb-16 relative">
+                         className="mt-16 md:mt-20 mb-12 md:mb-16 relative">
 
                         {/* HUD Header for Video */}
-                        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
-                            <h3 className="font-heading text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
-                                <MonitorPlay className="text-orange-500" size={28}/> Video Experience
+                        <div
+                            className="flex flex-col sm:flex-row sm:items-end justify-between mb-4 md:mb-6 gap-3 md:gap-4">
+                            <h3 className="font-heading text-xl md:text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-2 md:gap-3">
+                                <MonitorPlay className="text-orange-500 w-6 h-6 md:w-7 md:h-7"/> Video Experience
                             </h3>
                             <div
                                 className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-md w-max">
                                 <div className="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
-                                <span className="text-red-500 font-mono text-[10px] uppercase tracking-widest">Watch Tour</span>
+                                <span
+                                    className="text-red-500 font-mono text-[9px] md:text-[10px] uppercase tracking-widest">Watch Tour</span>
                             </div>
                         </div>
 
                         {/* Video Container */}
                         <div
-                            className="relative w-full aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.8)] bg-black group">
-                            {/* Fake Scanline */}
+                            className="relative w-full aspect-video rounded-[1.5rem] md:rounded-3xl overflow-hidden border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.8)] bg-black group">
+                            {/* Fake Scanline - Desktop Only */}
                             <div
-                                className="absolute top-0 left-0 w-full h-[2px] bg-orange-500/30 opacity-0 group-hover:opacity-100 z-50 pointer-events-none animate-[scan_3s_linear_infinite]"
+                                className="absolute top-0 left-0 w-full h-[2px] bg-orange-500/30 opacity-0 group-hover:opacity-100 z-50 pointer-events-none animate-[scan_3s_linear_infinite] hidden md:block"
                                 style={{boxShadow: '0 0 20px 2px rgba(234,88,12,0.5)'}}></div>
 
                             <iframe
@@ -282,7 +294,7 @@ export default function SingleBlogPage() {
                                 title="Tour Video Log"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
-                                className="absolute inset-0 w-full h-full grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
+                                className="absolute inset-0 w-full h-full md:grayscale-[20%] md:group-hover:grayscale-0 transition-all duration-700"
                             ></iframe>
                         </div>
                     </div>
@@ -293,25 +305,27 @@ export default function SingleBlogPage() {
                 {/* ==================================================== */}
                 {(blog.facebookUrl || blog.youtubeUrl) && (
                     <div
-                        className="mt-20 pt-10 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-8 bg-[#0a0a0a]/50 p-8 rounded-3xl backdrop-blur-md">
-                        <div>
-                            <h4 className="font-heading text-white font-black uppercase tracking-widest mb-2 flex items-center gap-2">
-                                <Globe size={18} className="text-emerald-500"/> Connect With Us
+                        // Mobile GPU Fix: Solid background on mobile, blur on desktop
+                        className="mt-16 md:mt-20 pt-8 md:pt-10 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 bg-[#111] md:bg-[#0a0a0a]/50 p-6 md:p-8 rounded-[1.5rem] md:rounded-3xl md:backdrop-blur-md">
+                        <div className="text-center md:text-left">
+                            <h4 className="font-heading text-white font-black uppercase tracking-widest mb-1.5 md:mb-2 flex items-center justify-center md:justify-start gap-2">
+                                <Globe size={16} className="text-emerald-500 md:w-4 md:h-4"/> Connect With Us
                             </h4>
-                            <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em]">Explore more
-                                photos and videos on our social channels.</p>
+                            <p className="text-zinc-500 font-mono text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em]">
+                                Explore more photos and videos on our social channels.
+                            </p>
                         </div>
-                        <div className="flex flex-wrap gap-4 w-full md:w-auto">
+                        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full md:w-auto">
                             {blog.facebookUrl && (
                                 <a href={blog.facebookUrl} target="_blank" rel="noopener noreferrer"
-                                   className="flex-1 md:flex-none flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-[#1877F2]/10 border border-[#1877F2]/50 hover:bg-[#1877F2] text-[#1877F2] hover:text-white font-mono font-bold text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(24,119,242,0.2)]">
-                                    <Facebook size={16}/> Facebook
+                                   className="flex-1 md:flex-none flex items-center justify-center gap-2 md:gap-3 px-5 md:px-6 py-3.5 md:py-4 rounded-xl bg-[#1877F2]/10 border border-[#1877F2]/50 hover:bg-[#1877F2] text-[#1877F2] hover:text-white font-mono font-bold text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(24,119,242,0.2)]">
+                                    <Facebook size={14} className="md:w-4 md:h-4"/> Facebook
                                 </a>
                             )}
                             {blog.youtubeUrl && (
                                 <a href={blog.youtubeUrl} target="_blank" rel="noopener noreferrer"
-                                   className="flex-1 md:flex-none flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-[#FF0000]/10 border border-[#FF0000]/50 hover:bg-[#FF0000] text-[#FF0000] hover:text-white font-mono font-bold text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(255,0,0,0.2)]">
-                                    <Youtube size={16}/> YouTube
+                                   className="flex-1 md:flex-none flex items-center justify-center gap-2 md:gap-3 px-5 md:px-6 py-3.5 md:py-4 rounded-xl bg-[#FF0000]/10 border border-[#FF0000]/50 hover:bg-[#FF0000] text-[#FF0000] hover:text-white font-mono font-bold text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(255,0,0,0.2)]">
+                                    <Youtube size={14} className="md:w-4 md:h-4"/> YouTube
                                 </a>
                             )}
                         </div>

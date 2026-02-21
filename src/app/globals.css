@@ -27,11 +27,6 @@
     }
 }
 
-/* Base Setup */
-html {
-    scroll-behavior: smooth;
-}
-
 body {
     background-color: var(--color-background);
     color: #F3F4F6;

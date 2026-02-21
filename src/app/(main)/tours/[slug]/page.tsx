@@ -176,22 +176,8 @@ export default function TourDetailsPage() {
                         }, 0
                     )
                         .to(currentImg, {scale: 1.2, duration: transitionDuration, ease: "expo.inOut"}, 0);
-                } else if (animType === 3) {
-                    // 💥 4. NEW: THE BLOCK LOAD (Digital Matrix Glitch)
-                    // Uses 'steps(8)' to force the animation to stutter block-by-block
-                    fadeTl.fromTo(nextImg,
-                        {clipPath: "inset(100% 0% 0% 0%)", scale: 1.2, filter: "hue-rotate(90deg) contrast(2)"},
-                        {
-                            clipPath: "inset(0% 0% 0% 0%)",
-                            scale: 1,
-                            filter: "hue-rotate(0deg) contrast(1)",
-                            duration: transitionDuration,
-                            ease: "steps(4)"
-                        }, 0
-                    )
-                        .to(currentImg, {scale: 0.9, opacity: 0, duration: transitionDuration, ease: "steps(4)"}, 0);
                 } else {
-                    // 💥 5. NEW: THE PARTICLE IMPLOSION (Gooey Coalescence)
+                    // 💥 4. NEW: THE PARTICLE IMPLOSION (Gooey Coalescence)
                     // Uses extreme blur and contrast to simulate pixels melting together
                     fadeTl.fromTo(nextImg,
                         {scale: 2.5, filter: "blur(40px) brightness(3) contrast(5)", opacity: 0, rotationZ: 15},

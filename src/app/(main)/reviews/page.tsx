@@ -5,12 +5,17 @@ import {useRouter} from "next/navigation";
 import Image from "next/image";
 import {gsap} from "gsap";
 import {useGSAP} from "@gsap/react";
+import {ScrollTrigger} from "gsap/ScrollTrigger";
 import {
     Star, MessageSquare, Trash2, Loader2, Plus, X, Image as ImageIcon,
-    Radar, ShieldCheck, Crosshair, Cpu, Fingerprint, Target
+    Radar, ShieldCheck, Crosshair, Fingerprint, Target
 } from "lucide-react";
 import {api} from "@/lib/axios";
 import {useAuthStore} from "@/store/authStore";
+
+if (typeof window !== "undefined") {
+    gsap.registerPlugin(ScrollTrigger);
+}
 
 interface Review {
     reviewId: string;
@@ -41,7 +46,7 @@ export default function ReviewsPage() {
 
     const containerRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
-    const hasAnimated = useRef(false); // 🔥 The bulletproof animation lock
+    const hasAnimated = useRef(false);
 
     // 1. Fetch Reviews
     const fetchReviews = async () => {
@@ -59,43 +64,56 @@ export default function ReviewsPage() {
         fetchReviews();
     }, []);
 
-    // 2. CRAZY 3D ENTRANCE ANIMATIONS (Locked to run only once!)
+    // 2. CRAZY 3D ENTRANCE ANIMATIONS (Optimized for Load & Footer Fix)
     useGSAP(() => {
-        // Wait until loaded, data exists, and ensure we haven't animated yet
         if (loading || reviews.length === 0 || !containerRef.current || hasAnimated.current) return;
 
-        // Lock the animation so it never fires a second time
         hasAnimated.current = true;
 
-        const tl = gsap.timeline();
+        const timer = setTimeout(() => {
+            const tl = gsap.timeline();
 
-        // Background Ambience
-        tl.fromTo(".bg-grid-overlay", {opacity: 0}, {opacity: 0.5, duration: 1.5, ease: "power2.inOut"}, 0)
-            .fromTo(".bg-glow", {scale: 0.8, opacity: 0}, {scale: 1, opacity: 1, duration: 2, ease: "power3.out"}, 0);
+            // Background Ambience
+            tl.fromTo(".bg-grid-overlay", {opacity: 0}, {opacity: 0.5, duration: 1.5, ease: "power2.inOut"}, 0)
+                .fromTo(".bg-glow", {scale: 0.8, opacity: 0}, {
+                    scale: 1,
+                    opacity: 1,
+                    duration: 2,
+                    ease: "power3.out"
+                }, 0);
 
-        // Header reveal
-        tl.fromTo(".header-anim",
-            {y: -50, opacity: 0, rotationX: -20},
-            {y: 0, opacity: 1, rotationX: 0, duration: 1, ease: "expo.out", transformPerspective: 1000},
-            0.2
-        );
+            // Header reveal
+            tl.fromTo(".header-anim",
+                {y: -50, opacity: 0, rotationX: -20},
+                {y: 0, opacity: 1, rotationX: 0, duration: 1, ease: "expo.out", transformPerspective: 1000},
+                0.2
+            );
 
-        // 3D "Origami" Card Stagger
-        tl.fromTo(".review-card",
-            {y: 100, opacity: 0, rotationX: 45, rotationY: () => Math.random() * 20 - 10, scale: 0.8},
-            {
-                y: 0,
-                opacity: 1,
-                rotationX: 0,
-                rotationY: 0,
-                scale: 1,
-                duration: 1.2,
-                stagger: 0.1,
-                ease: "back.out(1.5)",
-                transformPerspective: 1000
-            },
-            0.4
-        );
+            // 3D "Origami" Card Stagger
+            tl.fromTo(".review-card",
+                {y: 100, opacity: 0, rotationX: 45, rotationY: () => Math.random() * 20 - 10, scale: 0.8},
+                {
+                    y: 0,
+                    opacity: 1,
+                    rotationX: 0,
+                    rotationY: 0,
+                    scale: 1,
+                    duration: 1.2,
+                    stagger: 0.1,
+                    ease: "back.out(1.5)",
+                    transformPerspective: 1000
+                },
+                0.4
+            );
+
+            // Refresh ScrollTrigger to ensure footer calculations are correct
+            if (typeof window !== "undefined") {
+                ScrollTrigger.refresh();
+            }
+
+        }, 100);
+
+        return () => clearTimeout(timer);
 
     }, {scope: containerRef, dependencies: [loading, reviews]});
 
@@ -172,7 +190,7 @@ export default function ReviewsPage() {
 
             // Re-trigger fetch
             setLoading(true);
-            hasAnimated.current = false; // Allow animation to play again when refreshing the list
+            hasAnimated.current = false;
             fetchReviews();
 
         } catch (err: any) {
@@ -214,27 +232,29 @@ export default function ReviewsPage() {
         <div ref={containerRef}
              className="relative min-h-[100svh] bg-[#020202] text-white selection:bg-emerald-600 pb-24 overflow-hidden perspective-[1000px]">
 
+            {/* Mobile Optimized Backgrounds */}
             <div
-                className="bg-grid-overlay absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
+                className="bg-grid-overlay absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0 will-change-transform"></div>
             <div
-                className="bg-glow absolute top-0 right-0 w-[50vw] h-[50vw] bg-emerald-600/10 blur-[150px] rounded-full pointer-events-none mix-blend-screen z-0"></div>
+                className="bg-glow absolute top-0 right-0 w-[50vw] h-[50vw] bg-emerald-600/10 blur-[80px] md:blur-[150px] rounded-full pointer-events-none mix-blend-screen z-0 will-change-transform"></div>
             <div
-                className="bg-glow absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none mix-blend-screen z-0"></div>
+                className="bg-glow absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-blue-600/10 blur-[80px] md:blur-[120px] rounded-full pointer-events-none mix-blend-screen z-0 will-change-transform"></div>
 
-            <div className="max-w-7xl mx-auto px-4 md:px-8 pt-16 md:pt-24 relative z-10">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 pt-12 md:pt-24 relative z-10">
 
+                {/* HEADER */}
                 <div
-                    className="header-anim flex flex-col md:flex-row items-center justify-between gap-8 mb-16 border-b border-white/10 pb-10">
+                    className="header-anim flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 mb-12 md:mb-16 border-b border-white/10 pb-8 md:pb-10 text-center md:text-left">
                     <div>
                         <div
-                            className="flex items-center justify-center md:justify-start gap-2 text-emerald-500 text-[10px] font-mono uppercase tracking-[0.3em] mb-3">
+                            className="flex items-center justify-center md:justify-start gap-2 text-emerald-500 text-[10px] font-mono uppercase tracking-[0.3em] mb-2 md:mb-3">
                             <ShieldCheck size={14}/> Verified Traveler Reviews
                         </div>
-                        <h1 className="font-heading text-5xl md:text-7xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                        <h1 className="font-heading text-4xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]">
                             TRAVELER <span
                             className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600"> STORIES</span>
                         </h1>
-                        <p className="text-zinc-400 mt-4 max-w-lg font-medium tracking-wide">
+                        <p className="text-zinc-400 mt-3 md:mt-4 max-w-lg font-medium tracking-wide text-sm md:text-base px-2 md:px-0">
                             Read authentic reviews, experiences, and travel stories directly from our community of
                             adventurers.
                         </p>
@@ -242,20 +262,23 @@ export default function ReviewsPage() {
 
                     <button
                         onClick={() => isAuthenticated ? setShowModal(true) : router.push("/login")}
-                        className="group relative px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-sm rounded-2xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] active:scale-[0.98] overflow-hidden"
+                        className="group relative px-6 md:px-8 py-3.5 md:py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-xs md:text-sm rounded-xl md:rounded-2xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] active:scale-[0.98] overflow-hidden shrink-0"
                     >
                         <div
                             className="absolute inset-0 bg-white/20 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-                        <span className="relative z-10 flex items-center gap-3">
-                            {isAuthenticated ? <Plus size={18}/> : <MessageSquare size={18}/>}
+                        <span className="relative z-10 flex items-center gap-2 md:gap-3">
+                            {isAuthenticated ? <Plus size={16}/> : <MessageSquare size={16}/>}
                             {isAuthenticated ? "Write a Review" : "Login to Review"}
                         </span>
                     </button>
                 </div>
 
+                {/* REVIEW GRID */}
                 {reviews.length === 0 ? (
-                    <div className="text-center py-20 text-zinc-500 font-mono tracking-widest uppercase">No reviews
-                        found yet. Be the first to share your experience!</div>
+                    <div
+                        className="text-center py-20 text-zinc-500 font-mono tracking-widest uppercase text-xs md:text-sm">
+                        No reviews found yet. Be the first to share your experience!
+                    </div>
                 ) : (
                     <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
                         {reviews.map((review) => (
@@ -263,15 +286,17 @@ export default function ReviewsPage() {
                                 key={review.reviewId}
                                 onMouseMove={(e) => handle3DHover(e, 8)}
                                 onMouseLeave={handle3DLeave}
-                                className="review-card break-inside-avoid relative bg-black/60 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-[2rem] shadow-2xl hover:shadow-[0_20px_60px_rgba(16,185,129,0.15)] hover:border-emerald-500/30 transition-all group overflow-hidden cursor-default"
+                                // Mobile performance fix: Solid background on mobile, glass on desktop
+                                className="review-card break-inside-avoid relative bg-[#111] md:bg-black/60 md:backdrop-blur-xl border border-white/10 p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-xl md:shadow-2xl hover:shadow-[0_20px_60px_rgba(16,185,129,0.15)] hover:border-emerald-500/30 transition-all group overflow-hidden cursor-default"
                             >
-                                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                                <div
+                                    className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none hidden md:block">
                                     <Fingerprint size={80}/>
                                 </div>
 
                                 {review.photoUrl && (
                                     <div
-                                        className="mb-6 rounded-2xl overflow-hidden relative w-full h-56 border border-white/5">
+                                        className="mb-5 md:mb-6 rounded-xl md:rounded-2xl overflow-hidden relative w-full h-48 md:h-56 border border-white/5">
                                         <Image
                                             src={review.photoUrl}
                                             alt="Travel Experience"
@@ -281,21 +306,21 @@ export default function ReviewsPage() {
                                         <div
                                             className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent opacity-80"/>
                                         <span
-                                            className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md px-2 py-1 rounded text-[8px] font-mono text-emerald-500 tracking-widest border border-emerald-500/30">
+                                            className="absolute bottom-2 md:bottom-3 right-2 md:right-3 bg-black/80 backdrop-blur-md px-2 py-1 rounded text-[7px] md:text-[8px] font-mono text-emerald-500 tracking-widest border border-emerald-500/30">
                                             TRAVEL PHOTO
                                         </span>
                                     </div>
                                 )}
 
-                                <div className="flex justify-between items-start mb-6 relative z-10">
-                                    <div className="flex items-center gap-4">
+                                <div className="flex justify-between items-start mb-5 md:mb-6 relative z-10">
+                                    <div className="flex items-center gap-3 md:gap-4 min-w-0">
                                         <div
-                                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 flex items-center justify-center font-black text-white shadow-inner">
+                                            className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 flex items-center justify-center font-black text-white shadow-inner shrink-0">
                                             {review.user.userName.charAt(0).toUpperCase()}
                                         </div>
-                                        <div>
-                                            <h3 className="font-heading font-bold text-white text-base leading-tight uppercase tracking-wider">{review.user.userName}</h3>
-                                            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">
+                                        <div className="min-w-0">
+                                            <h3 className="font-heading font-bold text-white text-sm md:text-base leading-tight uppercase tracking-wider truncate">{review.user.userName}</h3>
+                                            <p className="text-[9px] md:text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">
                                                 Traveled: {new Date(review.createdAt).toLocaleDateString('en-GB')}
                                             </p>
                                         </div>
@@ -303,28 +328,29 @@ export default function ReviewsPage() {
                                 </div>
 
                                 <div
-                                    className="flex items-center justify-between mb-4 bg-white/5 p-3 rounded-xl border border-white/5 relative z-10">
-                                    <div className="flex items-center gap-2 text-emerald-400">
-                                        <Target size={16}/>
-                                        <h4 className="text-xs font-black uppercase tracking-wider">{review.tourName}</h4>
+                                    className="flex items-center justify-between mb-4 bg-white/5 p-2.5 md:p-3 rounded-xl border border-white/5 relative z-10">
+                                    <div className="flex items-center gap-2 text-emerald-400 min-w-0">
+                                        <Target size={14} className="shrink-0"/>
+                                        <h4 className="text-[10px] md:text-xs font-black uppercase tracking-wider truncate">{review.tourName}</h4>
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        <Star size={14}
+                                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                                        <Star size={12}
                                               className="fill-orange-500 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]"/>
-                                        <span className="text-white text-sm font-bold">{review.rating}.0</span>
+                                        <span
+                                            className="text-white text-xs md:text-sm font-bold">{review.rating}.0</span>
                                     </div>
                                 </div>
 
-                                <p className="text-zinc-300 text-base leading-relaxed font-medium relative z-10">
+                                <p className="text-zinc-300 text-sm md:text-base leading-relaxed font-medium relative z-10 break-words">
                                     "{review.reviewText}"
                                 </p>
 
                                 {user?.role === "ADMIN" && (
                                     <button
                                         onClick={() => handleDelete(review.reviewId)}
-                                        className="absolute top-4 right-4 p-2.5 bg-red-500/20 border border-red-500/50 hover:bg-red-500 text-red-200 hover:text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all active:scale-95 shadow-lg z-20"
+                                        className="absolute top-4 right-4 p-2 bg-red-500/20 border border-red-500/50 hover:bg-red-500 text-red-200 hover:text-white rounded-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-all active:scale-95 shadow-lg z-20"
                                     >
-                                        <Trash2 size={16}/>
+                                        <Trash2 size={14}/>
                                     </button>
                                 )}
                             </div>
@@ -332,77 +358,81 @@ export default function ReviewsPage() {
                     </div>
                 )}
 
+                {/* REVIEW MODAL */}
                 {showModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300"
                              onClick={() => setShowModal(false)}/>
 
                         <div ref={modalRef}
-                             className="bg-[#050505] border border-white/10 w-full max-w-xl rounded-[2.5rem] p-8 shadow-[0_30px_100px_rgba(0,0,0,1)] relative z-10 overflow-hidden">
+                             className="bg-[#050505] border border-white/10 w-full max-w-xl rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-[0_30px_100px_rgba(0,0,0,1)] relative z-10 overflow-hidden max-h-[90vh] overflow-y-auto">
+
                             <div
-                                className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/10 blur-[80px] rounded-full pointer-events-none"></div>
+                                className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/10 blur-[80px] rounded-full pointer-events-none hidden md:block"></div>
                             <div
                                 className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50"></div>
 
                             <button onClick={() => setShowModal(false)}
-                                    className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors bg-white/5 p-2 rounded-full border border-white/10 hover:border-white/30">
-                                <X size={20}/>
+                                    className="absolute top-4 right-4 md:top-6 md:right-6 text-zinc-500 hover:text-white transition-colors bg-white/5 p-1.5 md:p-2 rounded-full border border-white/10 hover:border-white/30 z-20">
+                                <X size={18}/>
                             </button>
 
-                            <h2 className="font-heading text-3xl font-black text-white mb-2 tracking-tight uppercase flex items-center gap-3">
-                                <ShieldCheck className="text-emerald-500" size={32}/> Write a Review
+                            <h2 className="font-heading text-2xl md:text-3xl font-black text-white mb-1 md:mb-2 tracking-tight uppercase flex items-center gap-2 md:gap-3 mt-2 md:mt-0">
+                                <ShieldCheck className="text-emerald-500 w-6 h-6 md:w-8 md:h-8"/> Write a Review
                             </h2>
-                            <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] mb-8 border-b border-white/10 pb-6">
+                            <p className="text-zinc-500 font-mono text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] mb-6 md:mb-8 border-b border-white/10 pb-4 md:pb-6">
                                 Share your travel experience with the community.
                             </p>
 
-                            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 relative z-10">
 
-                                <div className="space-y-2 group">
+                                <div className="space-y-1.5 md:space-y-2 group">
                                     <label
-                                        className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-emerald-500 transition-colors">
+                                        className="text-[9px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-emerald-500 transition-colors ml-1">
                                         Tour Destination
                                     </label>
                                     <input
                                         type="text" required placeholder="e.g. Spiti Valley Expedition"
                                         value={formData.tourName}
                                         onChange={(e) => setFormData({...formData, tourName: e.target.value})}
-                                        className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white text-base focus:border-emerald-500 focus:bg-emerald-500/5 focus:outline-none transition-all shadow-inner"
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl p-3.5 md:p-4 text-white text-sm md:text-base focus:border-emerald-500 focus:bg-emerald-500/5 focus:outline-none transition-all shadow-inner"
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+                                <div className="space-y-1.5 md:space-y-2">
+                                    <label
+                                        className="text-[9px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 ml-1">
                                         Overall Rating
                                     </label>
                                     <div
-                                        className="flex items-center gap-2 bg-black/50 border border-white/10 rounded-xl p-3 w-max">
+                                        className="flex items-center gap-1 md:gap-2 bg-black/50 border border-white/10 rounded-xl p-2.5 md:p-3 w-max">
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <button key={star} type="button"
                                                     onClick={() => setFormData({...formData, rating: star})}
                                                     className="p-1 hover:scale-110 transition-transform">
-                                                <Star size={28}
+                                                <Star size={24}
                                                       className={formData.rating >= star ? "fill-orange-500 text-orange-500 drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]" : "text-zinc-700"}/>
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="space-y-2 group">
+                                <div className="space-y-1.5 md:space-y-2 group">
                                     <label
-                                        className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-emerald-500 transition-colors">
+                                        className="text-[9px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-emerald-500 transition-colors ml-1">
                                         Your Experience
                                     </label>
                                     <textarea
                                         required rows={4} placeholder="Tell us about your trip..."
                                         value={formData.reviewText}
                                         onChange={(e) => setFormData({...formData, reviewText: e.target.value})}
-                                        className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white text-base leading-relaxed focus:border-emerald-500 focus:bg-emerald-500/5 focus:outline-none resize-none transition-all shadow-inner"
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl p-3.5 md:p-4 text-white text-sm md:text-base leading-relaxed focus:border-emerald-500 focus:bg-emerald-500/5 focus:outline-none resize-none transition-all shadow-inner"
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+                                <div className="space-y-1.5 md:space-y-2">
+                                    <label
+                                        className="text-[9px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 ml-1">
                                         Add a Photo (Optional)
                                     </label>
                                     <div className="relative group cursor-pointer">
@@ -411,27 +441,27 @@ export default function ReviewsPage() {
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                         />
                                         <div
-                                            className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-3 transition-all ${previewUrl ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-zinc-700 bg-[#0a0a0a] group-hover:border-emerald-500/50 group-hover:bg-[#111]'}`}>
+                                            className={`border-2 border-dashed rounded-xl md:rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-2 md:gap-3 transition-all ${previewUrl ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-zinc-700 bg-[#0a0a0a] group-hover:border-emerald-500/50 group-hover:bg-[#111]'}`}>
                                             {previewUrl ? (
                                                 <div
-                                                    className="relative w-full h-40 rounded-xl overflow-hidden shadow-lg border border-white/10">
+                                                    className="relative w-full h-32 md:h-40 rounded-lg md:rounded-xl overflow-hidden shadow-lg border border-white/10">
                                                     <Image src={previewUrl} alt="Review Image" fill
                                                            className="object-cover"/>
                                                     <div
                                                         className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <ImageIcon size={24} className="text-white mb-2"/>
+                                                        <ImageIcon size={20} className="text-white mb-1.5 md:mb-2"/>
                                                         <span
-                                                            className="text-white font-mono text-xs uppercase tracking-widest">Replace Photo</span>
+                                                            className="text-white font-mono text-[10px] md:text-xs uppercase tracking-widest">Replace Photo</span>
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <>
                                                     <div
-                                                        className="p-4 bg-zinc-900 rounded-full text-zinc-500 group-hover:text-emerald-500 group-hover:bg-emerald-500/10 transition-colors shadow-inner">
-                                                        <Crosshair size={28}/>
+                                                        className="p-3 md:p-4 bg-zinc-900 rounded-full text-zinc-500 group-hover:text-emerald-500 group-hover:bg-emerald-500/10 transition-colors shadow-inner">
+                                                        <Crosshair size={24} className="md:w-7 md:h-7"/>
                                                     </div>
                                                     <span
-                                                        className="text-xs font-mono uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300">Click to upload a photo</span>
+                                                        className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300">Upload a photo</span>
                                                 </>
                                             )}
                                         </div>
@@ -440,11 +470,13 @@ export default function ReviewsPage() {
 
                                 <button
                                     type="submit" disabled={submitting || uploading}
-                                    className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-white/5 disabled:text-zinc-600 text-white font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] disabled:shadow-none flex justify-center items-center gap-3 active:scale-[0.98] border border-transparent disabled:border-white/10"
+                                    className="w-full py-4 md:py-5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-white/5 disabled:text-zinc-600 text-white font-black uppercase tracking-[0.15em] md:tracking-[0.2em] text-xs md:text-sm rounded-xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] disabled:shadow-none flex justify-center items-center gap-2 md:gap-3 active:scale-[0.98] border border-transparent disabled:border-white/10 mt-2"
                                 >
-                                    {uploading ? <><Loader2 size={20} className="animate-spin"/> Uploading
-                                        Photo...</> : submitting ? <><Loader2 size={20}
-                                                                              className="animate-spin"/> Submitting...</> : "Submit Review"}
+                                    {uploading ? <><Loader2 size={16}
+                                                            className="animate-spin md:w-5 md:h-5"/> Uploading...</> :
+                                        submitting ? <><Loader2 size={16}
+                                                                className="animate-spin md:w-5 md:h-5"/> Submitting...</> :
+                                            "Submit Review"}
                                 </button>
                             </form>
                         </div>

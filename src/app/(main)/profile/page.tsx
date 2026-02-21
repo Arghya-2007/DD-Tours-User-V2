@@ -5,11 +5,12 @@ import {useRouter} from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {gsap} from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {useGSAP} from "@gsap/react";
 import {
     User, Mail, Phone, MapPin, Calendar, Edit2, Save, Trash2,
     Loader2, LogOut, CreditCard, Compass, Star, ArrowRight, AlertTriangle,
-    CheckCircle, Clock, ShieldCheck, Download, IndianRupee, Fingerprint, Cpu, Target, ScanFace, Radar, Map
+    CheckCircle, Clock, ShieldCheck, Download, IndianRupee, ScanFace, Map, Target
 } from "lucide-react";
 import {api} from "@/lib/axios";
 import {useAuthStore} from "@/store/authStore";
@@ -104,35 +105,49 @@ export default function ProfilePage() {
         fetchDashboardData();
     }, []);
 
-    // 🎬 ADVANCED GSAP ORCHESTRATION
+    // 🎬 ADVANCED GSAP ORCHESTRATION WITH FLAWLESS LOADING FIX
     useGSAP(() => {
-        if (loading) return;
+        if (loading || !containerRef.current) return;
 
-        const tl = gsap.timeline();
+        const timer = setTimeout(() => {
+            const tl = gsap.timeline();
 
-        // Background & Header
-        tl.fromTo(".bg-grid-overlay", {opacity: 0}, {opacity: 0.5, duration: 1.5, ease: "power2.inOut"}, 0)
-            .fromTo(".header-anim", {y: -30, opacity: 0}, {y: 0, opacity: 1, duration: 1, ease: "expo.out"}, 0.2);
+            // Background & Header
+            tl.fromTo(".bg-grid-overlay", {opacity: 0}, {opacity: 0.5, duration: 1.5, ease: "power2.inOut"}, 0)
+                .fromTo(".header-anim", {y: -30, opacity: 0}, {y: 0, opacity: 1, duration: 1, ease: "expo.out"}, 0.2);
 
-        // Sidebar 3D Reveal
-        tl.fromTo(".sidebar-anim",
-            {x: -50, opacity: 0, rotationY: 15},
-            {x: 0, opacity: 1, rotationY: 0, duration: 1.2, ease: "power3.out"},
-            0.3
-        );
+            // Sidebar 3D Reveal
+            tl.fromTo(".sidebar-anim",
+                {x: -50, opacity: 0, rotationY: 15},
+                {x: 0, opacity: 1, rotationY: 0, duration: 1.2, ease: "power3.out"},
+                0.3
+            );
 
-        // Continuous Sidebar Hologram Float
-        if (sidebarRef.current) {
-            gsap.to(sidebarRef.current, {
-                y: -10, duration: 4, repeat: -1, yoyo: true, ease: "sine.inOut"
-            });
-        }
+            // Continuous Sidebar Hologram Float
+            if (sidebarRef.current) {
+                gsap.to(sidebarRef.current, {
+                    y: -10, duration: 4, repeat: -1, yoyo: true, ease: "sine.inOut"
+                });
+            }
 
-        // Infinite Scanner Line
-        gsap.fromTo(".scanner-line",
-            {top: "-10%", opacity: 0},
-            {top: "110%", opacity: 1, duration: 3, repeat: -1, ease: "linear"}
-        );
+            // Infinite Scanner Line
+            gsap.fromTo(".scanner-line",
+                {top: "-10%", opacity: 0},
+                {top: "110%", opacity: 1, duration: 3, repeat: -1, ease: "linear"}
+            );
+
+            if (typeof window !== "undefined") {
+                gsap.registerPlugin(ScrollTrigger); // 👈 2. ADD THIS BLOCK
+            }
+
+            // Trigger ScrollTrigger refresh to ensure footer visibility
+            if (typeof window !== "undefined") {
+                ScrollTrigger.refresh();
+            }
+
+        }, 100);
+
+        return () => clearTimeout(timer);
 
     }, {scope: containerRef, dependencies: [loading]});
 
@@ -349,45 +364,45 @@ export default function ProfilePage() {
         <div ref={containerRef}
              className="relative min-h-[100svh] bg-[#020202] text-white selection:bg-orange-600 overflow-hidden font-sans perspective-[1000px] pb-24">
 
-            {/* 🌐 TACTICAL GRID & AMBIENT GLOWS */}
+            {/* 🌐 TACTICAL GRID & AMBIENT GLOWS - Optimized for Mobile */}
             <div
-                className="bg-grid-overlay absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
+                className="bg-grid-overlay absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0 will-change-transform"></div>
             <div
-                className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-orange-600/10 blur-[150px] rounded-full pointer-events-none mix-blend-screen z-0 animate-pulse"></div>
+                className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-orange-600/10 blur-[80px] md:blur-[150px] rounded-full pointer-events-none mix-blend-screen z-0 animate-pulse will-change-transform"></div>
             <div
-                className="absolute bottom-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-emerald-600/10 blur-[120px] rounded-full pointer-events-none mix-blend-screen z-0"></div>
+                className="absolute bottom-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-emerald-600/10 blur-[80px] md:blur-[120px] rounded-full pointer-events-none mix-blend-screen z-0 will-change-transform"></div>
 
-            <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16 relative z-10">
+            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-16 relative z-10">
 
-                {/* 🌟 HEADER */}
+                {/* 🌟 HEADER - Responsive text scaling */}
                 <div
-                    className="header-anim mb-12 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-8">
+                    className="header-anim mb-8 md:mb-12 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6 md:pb-8">
                     <div>
                         <div
-                            className="flex items-center justify-center md:justify-start gap-2 text-orange-500 text-[10px] font-mono uppercase tracking-[0.3em] mb-3">
+                            className="flex items-center justify-center md:justify-start gap-2 text-orange-500 text-[10px] font-mono uppercase tracking-[0.3em] mb-2 md:mb-3">
                             <ShieldCheck size={14}/> Secure Dashboard
                         </div>
-                        {/* 🔥 Typography Fix */}
-                        <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_20px_rgba(234,88,12,0.3)]">
+                        <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_20px_rgba(234,88,12,0.3)]">
                             Traveler <span className="text-orange-500">PROFILE</span>
                         </h1>
                     </div>
                     <div
-                        className="font-mono text-[10px] text-zinc-500 uppercase tracking-[0.2em] text-right hidden md:block">
+                        className="font-mono text-[10px] text-zinc-500 uppercase tracking-[0.2em] text-center md:text-right">
                         <p>STATUS: <span className="text-emerald-500">VERIFIED</span></p>
-                        <p>MEMBER TIER: EXPLORER</p>
+                        <p className="hidden md:block">MEMBER TIER: EXPLORER</p>
                     </div>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-10">
+                <div className="flex flex-col lg:flex-row gap-8 md:gap-10">
 
                     {/* 📱 LEFT SIDEBAR (Interactive Hologram ID Card) */}
                     <div className="lg:w-1/3 flex flex-col gap-6 sidebar-anim">
+                        {/* Removed heavy blur on mobile for performance */}
                         <div
                             ref={sidebarRef}
                             onMouseMove={(e) => handle3DHover(e, 5)}
                             onMouseLeave={handle3DLeave}
-                            className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-center transition-shadow hover:shadow-[0_20px_60px_rgba(234,88,12,0.15)]"
+                            className="bg-[#111] md:bg-black/60 md:backdrop-blur-2xl border border-white/10 rounded-[1.5rem] md:rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-center transition-shadow hover:shadow-[0_20px_60px_rgba(234,88,12,0.15)]"
                         >
                             <div
                                 className="scanner-line absolute left-0 w-full h-[2px] bg-orange-500/50 shadow-[0_0_15px_#ea580c] z-50 pointer-events-none"></div>
@@ -395,46 +410,50 @@ export default function ProfilePage() {
                                 className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-orange-600/20 to-transparent pointer-events-none"/>
 
                             <div
-                                className="relative w-28 h-28 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-5xl font-black text-white shadow-[0_0_30px_rgba(234,88,12,0.4)] mb-6 border border-white/20">
+                                className="relative w-24 h-24 md:w-28 md:h-28 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-4xl md:text-5xl font-black text-white shadow-[0_0_30px_rgba(234,88,12,0.4)] mb-4 md:mb-6 border border-white/20">
                                 {profile.userName.charAt(0).toUpperCase()}
                             </div>
 
-                            {/* 🔥 Typography Fix */}
-                            <h2 className="font-heading text-2xl font-black text-white uppercase tracking-wide relative z-10">{profile.userName}</h2>
-                            <p className="text-zinc-400 font-mono text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 mt-2 relative z-10">
-                                <Mail size={12} className="text-orange-500"/> {profile.userEmail}
+                            {/* Responsive Text Fix */}
+                            <h2 className="font-heading text-xl md:text-2xl font-black text-white uppercase tracking-wide relative z-10 break-words line-clamp-1">{profile.userName}</h2>
+                            <p className="text-zinc-400 font-mono text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] flex items-center justify-center gap-1.5 md:gap-2 mt-1 md:mt-2 relative z-10 truncate">
+                                <Mail size={10} className="text-orange-500 shrink-0"/> <span
+                                className="truncate">{profile.userEmail}</span>
                             </p>
 
-                            <div className="mt-8 flex flex-col gap-3 relative z-10">
+                            <div className="mt-6 md:mt-8 flex flex-col gap-2.5 md:gap-3 relative z-10">
                                 <button
                                     onClick={() => setActiveTab("PROFILE")}
-                                    className={`py-4 px-6 rounded-xl font-bold uppercase tracking-widest transition-all flex items-center gap-3 border ${activeTab === "PROFILE" ? "bg-orange-600 text-white border-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.4)]" : "bg-[#111] text-zinc-400 border-white/5 hover:border-white/20 hover:text-white"}`}
+                                    className={`py-3.5 md:py-4 px-4 md:px-6 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-3 border ${activeTab === "PROFILE" ? "bg-orange-600 text-white border-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.4)]" : "bg-[#0a0a0a] md:bg-[#111] text-zinc-400 border-white/5 hover:border-white/20 hover:text-white"}`}
                                 >
-                                    <User size={16}/> Personal Details
+                                    <User size={14} className="shrink-0"/> <span
+                                    className="truncate">Personal Details</span>
                                 </button>
                                 <button
                                     onClick={() => setActiveTab("BOOKINGS")}
-                                    className={`py-4 px-6 rounded-xl font-bold uppercase tracking-widest transition-all flex items-center gap-3 border ${activeTab === "BOOKINGS" ? "bg-orange-600 text-white border-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.4)]" : "bg-[#111] text-zinc-400 border-white/5 hover:border-white/20 hover:text-white"}`}
+                                    className={`py-3.5 md:py-4 px-4 md:px-6 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-3 border ${activeTab === "BOOKINGS" ? "bg-orange-600 text-white border-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.4)]" : "bg-[#0a0a0a] md:bg-[#111] text-zinc-400 border-white/5 hover:border-white/20 hover:text-white"}`}
                                 >
-                                    <Target size={16}/> My Bookings
+                                    <Target size={14} className="shrink-0"/> <span
+                                    className="truncate">My Bookings</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* Danger Zone */}
                         <div
-                            className="bg-[#111]/80 backdrop-blur-md border border-red-500/20 rounded-3xl p-6 shadow-xl">
-                            <p className="text-red-500/80 text-[10px] font-mono uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                                <AlertTriangle size={12}/> Account Security
+                            className="bg-[#0a0a0a] md:bg-[#111]/80 md:backdrop-blur-md border border-red-500/20 rounded-[1.5rem] md:rounded-3xl p-5 md:p-6 shadow-xl">
+                            <p className="text-red-500/80 text-[9px] md:text-[10px] font-mono uppercase tracking-[0.2em] md:tracking-[0.3em] mb-3 md:mb-4 flex items-center gap-2">
+                                <AlertTriangle size={12} className="shrink-0"/> Account Security
                             </p>
-                            <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-2.5 md:gap-3">
                                 <button onClick={handleLogout}
-                                        className="flex items-center justify-between px-5 py-3.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 text-zinc-300 transition-all text-xs font-bold uppercase tracking-widest">
-                                    Sign Out <LogOut size={14}/>
+                                        className="flex items-center justify-between px-4 md:px-5 py-3 md:py-3.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 text-zinc-300 transition-all text-[10px] md:text-xs font-bold uppercase tracking-widest">
+                                    <span className="truncate">Sign Out</span> <LogOut size={12} className="shrink-0"/>
                                 </button>
                                 <button onClick={handleDelete}
-                                        className="flex items-center justify-between px-5 py-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-500 transition-all text-xs font-bold uppercase tracking-widest">
-                                    Delete Account <Trash2 size={14}/>
+                                        className="flex items-center justify-between px-4 md:px-5 py-3 md:py-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-500 transition-all text-[10px] md:text-xs font-bold uppercase tracking-widest">
+                                    <span className="truncate">Delete Account</span> <Trash2 size={12}
+                                                                                             className="shrink-0"/>
                                 </button>
                             </div>
                         </div>
@@ -448,163 +467,165 @@ export default function ProfilePage() {
                         {/* ============================== */}
                         {activeTab === "PROFILE" && (
                             <div
-                                className="tab-content-anim bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                                className="tab-content-anim bg-[#111] md:bg-black/60 md:backdrop-blur-2xl border border-white/10 rounded-[1.5rem] md:rounded-[2rem] p-5 sm:p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                                 <div
-                                    className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 pb-6 border-b border-white/10 gap-4">
-                                    {/* 🔥 Typography Fix */}
-                                    <h3 className="font-heading text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                                        <ScanFace className="text-orange-500"/> Profile Information
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 pb-4 md:pb-6 border-b border-white/10 gap-3 md:gap-4">
+                                    <h3 className="font-heading text-lg sm:text-xl md:text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2 md:gap-3">
+                                        <ScanFace className="text-orange-500 w-5 h-5 sm:w-6 sm:h-6 shrink-0"/>
+                                        <span className="truncate">Profile Info</span>
                                     </h3>
                                     {!isEditing ? (
                                         <button onClick={() => setIsEditing(true)}
-                                                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
-                                            <Edit2 size={14}/> Edit Profile
+                                                className="flex items-center justify-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all shrink-0">
+                                            <Edit2 size={12} className="shrink-0"/> Edit
                                         </button>
                                     ) : (
                                         <div className="flex gap-2">
                                             <button onClick={() => setIsEditing(false)}
-                                                    className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-transparent border border-white/10 hover:bg-white/5 text-zinc-400 text-xs font-bold uppercase tracking-widest transition-all">Cancel
+                                                    className="flex-1 sm:flex-none px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-transparent border border-white/10 hover:bg-white/5 text-zinc-400 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all">Cancel
                                             </button>
                                             <button onClick={handleSave} disabled={saving}
-                                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(234,88,12,0.4)]">
-                                                {saving ? <Loader2 size={14} className="animate-spin"/> :
-                                                    <Save size={14}/>} Save Changes
+                                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(234,88,12,0.4)]">
+                                                {saving ? <Loader2 size={12} className="animate-spin shrink-0"/> :
+                                                    <Save size={12} className="shrink-0"/>} Save
                                             </button>
                                         </div>
                                     )}
                                 </div>
 
                                 {error && <div
-                                    className="mb-8 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium flex items-center gap-3">
-                                    <AlertTriangle size={18} className="shrink-0"/> {error}</div>}
+                                    className="mb-6 md:mb-8 p-3 md:p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs md:text-sm font-medium flex items-start gap-2 md:gap-3">
+                                    <AlertTriangle size={14} className="shrink-0 mt-0.5 md:mt-0"/> <span>{error}</span>
+                                </div>}
                                 {successMsg && <div
-                                    className="mb-8 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-medium flex items-center gap-3">
-                                    <CheckCircle size={18} className="shrink-0"/> {successMsg}</div>}
+                                    className="mb-6 md:mb-8 p-3 md:p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs md:text-sm font-medium flex items-center gap-2 md:gap-3">
+                                    <CheckCircle size={14} className="shrink-0"/> <span>{successMsg}</span></div>}
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
 
-                                    {/* Input Blocks */}
-                                    <div className="space-y-2 group">
+                                    {/* Input Blocks - Optimized for mobile typing */}
+                                    <div className="space-y-1.5 md:space-y-2 group min-w-0">
                                         <label
-                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Full
+                                            className="text-[9px] md:text-[10px] font-mono uppercase tracking-[0.1em] md:tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors ml-1">Full
                                             Name</label>
                                         {isEditing ? (
                                             <div className="relative">
                                                 <User
-                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
-                                                    size={18}/>
+                                                    className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
+                                                    size={16}/>
                                                 <input type="text" value={formData?.userName}
                                                        onChange={(e) => setFormData({
                                                            ...formData!,
                                                            userName: e.target.value
                                                        })}
-                                                       className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner"/>
+                                                       className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 md:py-3.5 pl-10 md:pl-12 pr-4 text-white text-xs md:text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner"/>
                                             </div>
                                         ) : (<div
-                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-sm font-medium">{profile.userName}</div>)}
+                                            className="p-3 md:p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-xs md:text-sm font-medium truncate">{profile.userName}</div>)}
                                     </div>
 
-                                    <div className="space-y-2 group">
+                                    <div className="space-y-1.5 md:space-y-2 group min-w-0">
                                         <label
-                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Phone
+                                            className="text-[9px] md:text-[10px] font-mono uppercase tracking-[0.1em] md:tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors ml-1">Phone
                                             Number</label>
                                         {isEditing ? (
                                             <div className="relative">
                                                 <Phone
-                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
-                                                    size={18}/>
+                                                    className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
+                                                    size={16}/>
                                                 <input type="tel" value={formData?.phoneNumber}
                                                        onChange={(e) => setFormData({
                                                            ...formData!,
                                                            phoneNumber: e.target.value
                                                        })}
-                                                       className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner"/>
+                                                       className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 md:py-3.5 pl-10 md:pl-12 pr-4 text-white text-xs md:text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner"/>
                                             </div>
                                         ) : (<div
-                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-sm font-medium">{profile.phoneNumber || "NOT PROVIDED"}</div>)}
+                                            className="p-3 md:p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-xs md:text-sm font-medium truncate">{profile.phoneNumber || "NOT PROVIDED"}</div>)}
                                     </div>
 
-                                    <div className="space-y-2 group">
+                                    <div className="space-y-1.5 md:space-y-2 group min-w-0">
                                         <label
-                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Govt
+                                            className="text-[9px] md:text-[10px] font-mono uppercase tracking-[0.1em] md:tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors ml-1">Govt
                                             ID (Aadhar)</label>
                                         {isEditing ? (
                                             <div className="relative">
                                                 <CreditCard
-                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
-                                                    size={18}/>
+                                                    className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
+                                                    size={16}/>
                                                 <input type="text" placeholder="XXXX-XXXX-XXXX"
                                                        value={formData?.aadharNumber || ""}
                                                        onChange={(e) => setFormData({
                                                            ...formData!,
                                                            aadharNumber: e.target.value
                                                        })}
-                                                       className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white font-mono text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner"/>
+                                                       className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 md:py-3.5 pl-10 md:pl-12 pr-4 text-white font-mono text-xs md:text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner"/>
                                             </div>
                                         ) : (<div
-                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-300 text-sm font-mono tracking-widest">{profile.aadharNumber || "NOT PROVIDED"}</div>)}
+                                            className="p-3 md:p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-300 text-xs md:text-sm font-mono tracking-[0.1em] md:tracking-widest truncate">{profile.aadharNumber || "NOT PROVIDED"}</div>)}
                                     </div>
 
-                                    <div className="space-y-2 group">
+                                    <div className="space-y-1.5 md:space-y-2 group min-w-0">
                                         <label
-                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Date
+                                            className="text-[9px] md:text-[10px] font-mono uppercase tracking-[0.1em] md:tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors ml-1">Date
                                             of Birth</label>
                                         {isEditing ? (
                                             <div className="relative">
                                                 <Calendar
-                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
-                                                    size={18}/>
+                                                    className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
+                                                    size={16}/>
                                                 <input type="date" value={formatDateForInput(formData?.dob || null)}
                                                        onChange={(e) => setFormData({
                                                            ...formData!,
                                                            dob: e.target.value
                                                        })}
-                                                       className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner [color-scheme:dark]"/>
+                                                       className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 md:py-3.5 pl-10 md:pl-12 pr-4 text-white text-xs md:text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner [color-scheme:dark]"/>
                                             </div>
                                         ) : (<div
-                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-sm font-medium">{formatDateForDisplay(profile.dob)}</div>)}
+                                            className="p-3 md:p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-xs md:text-sm font-medium truncate">{formatDateForDisplay(profile.dob)}</div>)}
                                     </div>
 
-                                    <div className="space-y-2 md:col-span-2 group">
+                                    <div className="space-y-1.5 md:space-y-2 md:col-span-2 group min-w-0">
                                         <label
-                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Home
+                                            className="text-[9px] md:text-[10px] font-mono uppercase tracking-[0.1em] md:tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors ml-1">Home
                                             Address</label>
                                         {isEditing ? (
                                             <div className="relative">
                                                 <MapPin
-                                                    className="absolute left-4 top-4 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
-                                                    size={18}/>
+                                                    className="absolute left-3 md:left-4 top-3.5 md:top-4 text-zinc-500 group-focus-within:text-orange-500 transition-colors"
+                                                    size={16}/>
                                                 <textarea value={formData?.userAddress || ""}
                                                           onChange={(e) => setFormData({
                                                               ...formData!,
                                                               userAddress: e.target.value
                                                           })}
-                                                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner min-h-[120px] resize-none"
+                                                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 md:py-3.5 pl-10 md:pl-12 pr-4 text-white text-xs md:text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner min-h-[100px] md:min-h-[120px] resize-none"
                                                           placeholder="Enter full address"/>
                                             </div>
                                         ) : (<div
-                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-sm font-medium min-h-[80px]">{profile.userAddress || "NOT PROVIDED"}</div>)}
+                                            className="p-3 md:p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-xs md:text-sm font-medium min-h-[60px] md:min-h-[80px] break-words">{profile.userAddress || "NOT PROVIDED"}</div>)}
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {/* ============================== */}
-                        {/* 🚀 TAB 2: MISSION LOGS / BOOKINGS */}
+                        {/* 🚀 TAB 2: BOOKINGS / MISSION LOGS */}
                         {/* ============================== */}
                         {activeTab === "BOOKINGS" && (
-                            <div className="space-y-6">
+                            <div className="space-y-4 md:space-y-6">
                                 {bookings.length === 0 ? (
                                     <div
-                                        className="tab-content-anim bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 sm:p-16 text-center shadow-2xl">
-                                        <Map size={64} className="mx-auto text-zinc-700 mb-6"/>
-                                        <h3 className="font-heading text-xl sm:text-2xl font-black text-white uppercase tracking-widest mb-3">No
+                                        className="tab-content-anim bg-[#111] md:bg-black/60 md:backdrop-blur-2xl border border-white/10 rounded-[1.5rem] md:rounded-[2rem] p-8 sm:p-12 md:p-16 text-center shadow-2xl">
+                                        <Map size={48} className="mx-auto text-zinc-700 mb-4 md:mb-6 sm:w-16 sm:h-16"/>
+                                        <h3 className="font-heading text-lg sm:text-xl md:text-2xl font-black text-white uppercase tracking-widest mb-2 md:mb-3">No
                                             Trips Booked Yet</h3>
-                                        <p className="text-zinc-400 text-sm mb-8">You haven't booked any adventures yet.
+                                        <p className="text-zinc-400 text-xs md:text-sm mb-6 md:mb-8">You haven't booked
+                                            any adventures yet.
                                             Start exploring!</p>
                                         <Link href="/tours"
-                                              className="inline-flex items-center justify-center gap-3 px-8 py-4 w-full sm:w-auto bg-orange-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-orange-500 transition-colors shadow-[0_0_20px_rgba(234,88,12,0.4)]">
-                                            Browse Tours <ArrowRight size={16}/>
+                                              className="inline-flex items-center justify-center gap-2 md:gap-3 px-6 md:px-8 py-3.5 md:py-4 w-full sm:w-auto bg-orange-600 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] md:text-xs hover:bg-orange-500 transition-colors shadow-[0_0_20px_rgba(234,88,12,0.4)]">
+                                            Browse Tours <ArrowRight size={14} className="md:w-4 md:h-4"/>
                                         </Link>
                                     </div>
                                 ) : (
@@ -620,124 +641,134 @@ export default function ProfilePage() {
                                                 key={booking.bookingId}
                                                 onMouseMove={(e) => handle3DHover(e, 4)}
                                                 onMouseLeave={handle3DLeave}
-                                                className="tab-content-anim bg-black/60 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col md:flex-row group transition-shadow hover:shadow-[0_20px_60px_rgba(234,88,12,0.15)] hover:border-white/20 relative"
+                                                // Responsive Fix: Added overflow-hidden to prevent inner content clipping out
+                                                className="tab-content-anim bg-[#111] md:bg-black/60 md:backdrop-blur-xl border border-white/10 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl md:shadow-2xl flex flex-col md:flex-row group transition-shadow hover:shadow-[0_20px_60px_rgba(234,88,12,0.15)] hover:border-white/20 relative"
                                             >
                                                 {/* Desktop Boarding Pass Download */}
                                                 {canDownloadPass && (
                                                     <button
                                                         onClick={() => handleDownloadPass(booking.bookingId)}
                                                         disabled={downloadingId === booking.bookingId}
-                                                        className="absolute top-6 right-6 z-20 hidden md:flex items-center justify-center w-12 h-12 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95"
+                                                        className="absolute top-4 md:top-6 right-4 md:right-6 z-20 hidden md:flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95 shrink-0"
                                                         title="Download Boarding Pass"
                                                     >
                                                         {downloadingId === booking.bookingId ?
-                                                            <Loader2 size={20} className="animate-spin"/> :
-                                                            <Download size={20}/>}
+                                                            <Loader2 size={18}
+                                                                     className="animate-spin md:w-5 md:h-5 shrink-0"/> :
+                                                            <Download size={18} className="md:w-5 md:h-5 shrink-0"/>}
                                                     </button>
                                                 )}
 
                                                 {/* Left: Cinematic Image Box */}
                                                 <div
-                                                    className="relative w-full md:w-72 h-48 sm:h-56 md:h-auto shrink-0 bg-[#050505] overflow-hidden">
+                                                    className="relative w-full md:w-64 lg:w-72 h-40 sm:h-48 md:h-auto shrink-0 bg-[#050505] overflow-hidden">
                                                     <Image src={coverImage} alt="Tour" fill
                                                            sizes="(max-width: 768px) 100vw, 300px"
                                                            className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out opacity-80"/>
                                                     <div
-                                                        className="absolute inset-0 bg-gradient-to-t from-[#020202] md:bg-gradient-to-r md:from-transparent md:via-[#020202]/50 md:to-[#020202] opacity-100"/>
+                                                        className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent md:bg-gradient-to-r md:from-transparent md:via-[#020202]/50 md:to-[#111] opacity-100"/>
 
                                                     {/* Status Badges Overlay */}
-                                                    <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                                <span
-                                    className="bg-black/80 backdrop-blur-md px-3 py-1.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest text-orange-500 border border-orange-500/30 shadow-lg w-max">
-                                    TOUR: {booking.tour?.tourStatus || "UNKNOWN"}
-                                </span>
+                                                    <div
+                                                        className="absolute top-3 md:top-4 left-3 md:left-4 flex flex-col gap-1.5 md:gap-2 z-10">
                                                         <span
-                                                            className={`px-3 py-1.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest border shadow-lg backdrop-blur-md w-max ${booking.bookingStatus === 'CONFIRMED' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : booking.bookingStatus === 'CANCELLED' ? 'bg-red-500/10 border-red-500/50 text-red-400' : 'bg-zinc-500/10 border-zinc-500/50 text-zinc-400'}`}>
-                                    BOOKING: {booking.bookingStatus}
-                                </span>
+                                                            className="bg-black/80 backdrop-blur-md px-2.5 md:px-3 py-1 md:py-1.5 rounded text-[8px] md:text-[9px] font-mono font-bold uppercase tracking-widest text-orange-500 border border-orange-500/30 shadow-lg w-max">
+                                                            TOUR: {booking.tour?.tourStatus || "UNKNOWN"}
+                                                        </span>
+                                                        <span
+                                                            className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded text-[8px] md:text-[9px] font-mono font-bold uppercase tracking-widest border shadow-lg backdrop-blur-md w-max ${booking.bookingStatus === 'CONFIRMED' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : booking.bookingStatus === 'CANCELLED' ? 'bg-red-500/10 border-red-500/50 text-red-400' : 'bg-zinc-500/10 border-zinc-500/50 text-zinc-400'}`}>
+                                                            BOOKING: {booking.bookingStatus}
+                                                        </span>
                                                     </div>
                                                 </div>
 
-                                                {/* Right: Content - ADDED min-w-0 TO PREVENT OVERFLOW */}
+                                                {/* Right: Content - FLAWLESS OVERFLOW FIX */}
                                                 <div
-                                                    className="p-5 sm:p-6 md:p-8 flex flex-col flex-1 min-w-0 relative z-10">
+                                                    className="p-4 sm:p-5 md:p-8 flex flex-col flex-1 min-w-0 relative z-10">
+
                                                     <div
-                                                        className="flex flex-col sm:flex-row justify-between sm:items-start gap-4 mb-6">
-                                                        {/* REMOVED UNNECESSARY MOBILE RIGHT PADDING */}
-                                                        <div className="pr-0 md:pr-14 min-w-0 w-full">
-                                    <span
-                                        className="text-zinc-500 text-[10px] font-mono font-bold uppercase tracking-[0.2em] block mb-1 truncate">
-                                        BOOKING ID: {booking.bookingId.split('-')[0].toUpperCase()}
-                                    </span>
-                                                            {/* ADDED break-words TO HANDLE LONG TITLES */}
-                                                            <h3 className="font-heading text-xl sm:text-1xl md:text-2xl font-black text-white uppercase tracking-tight leading-tight line-clamp-2 break-words">
+                                                        className="flex flex-col md:flex-row justify-between md:items-start gap-2 md:gap-4 mb-4 md:mb-6">
+                                                        <div className="pr-0 md:pr-16 min-w-0 w-full flex-1">
+                                                            <span
+                                                                className="text-zinc-500 text-[9px] md:text-[10px] font-mono font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] block mb-1 truncate">
+                                                                ID: {booking.bookingId.split('-')[0].toUpperCase()}
+                                                            </span>
+                                                            <h3 className="font-heading text-lg sm:text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-tight line-clamp-2 break-words">
                                                                 {booking.tour?.tourTitle || "Unknown Tour"}
                                                             </h3>
                                                         </div>
                                                         <div
-                                                            className="text-left sm:text-right shrink-0 hidden md:block">
+                                                            className="text-left md:text-right shrink-0 hidden md:block mt-1 md:mt-0">
                                                             <span
                                                                 className="text-zinc-500 text-[10px] font-mono uppercase tracking-[0.2em] block mb-1">Total Paid</span>
                                                             <span
-                                                                className="font-heading text-2xl font-black text-white flex items-center tracking-tighter">
-                                        <IndianRupee size={20} className="text-orange-500 mr-0.5"/>
-                                                                {booking.totalPrice?.toLocaleString("en-IN")}
-                                    </span>
+                                                                className="font-heading text-2xl font-black text-white flex items-center md:justify-end tracking-tighter">
+                                                                <IndianRupee size={20}
+                                                                             className="text-orange-500 mr-0.5 shrink-0"/>
+                                                                <span
+                                                                    className="truncate">{booking.totalPrice?.toLocaleString("en-IN")}</span>
+                                                            </span>
                                                         </div>
                                                     </div>
 
                                                     {/* Details Breakdown */}
                                                     <div
-                                                        className="grid grid-cols-2 lg:grid-cols-3 gap-y-5 gap-x-3 mb-6 sm:mb-8 pb-6 border-b border-white/5 font-mono text-[10px] sm:text-xs">
+                                                        className="grid grid-cols-2 lg:grid-cols-3 gap-y-3 sm:gap-y-4 md:gap-y-5 gap-x-2 md:gap-x-3 mb-5 sm:mb-6 md:mb-8 pb-4 md:pb-6 border-b border-white/5 font-mono text-[9px] sm:text-[10px] md:text-xs">
                                                         <div className="min-w-0">
                                                             <span
-                                                                className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] block mb-1 truncate">Payment Status</span>
+                                                                className="text-zinc-500 text-[8px] md:text-[9px] uppercase tracking-[0.1em] md:tracking-[0.2em] block mb-0.5 md:mb-1 truncate">Payment Status</span>
                                                             <span
-                                                                className={`font-bold uppercase tracking-wider flex items-center gap-1.5 truncate ${booking.paymentStatus === 'COMPLETED' ? 'text-emerald-500' : booking.paymentStatus === 'FAILED' ? 'text-red-500' : 'text-orange-500'}`}>
-                                        {booking.paymentStatus === 'COMPLETED' ?
-                                            <CheckCircle size={12} className="shrink-0"/> :
-                                            <Clock size={12} className="shrink-0"/>}
+                                                                className={`font-bold uppercase tracking-wide md:tracking-wider flex items-center gap-1 md:gap-1.5 truncate ${booking.paymentStatus === 'COMPLETED' ? 'text-emerald-500' : booking.paymentStatus === 'FAILED' ? 'text-red-500' : 'text-orange-500'}`}>
+                                                                {booking.paymentStatus === 'COMPLETED' ?
+                                                                    <CheckCircle size={10}
+                                                                                 className="shrink-0 md:w-3 md:h-3"/> :
+                                                                    <Clock size={10}
+                                                                           className="shrink-0 md:w-3 md:h-3"/>}
                                                                 <span
                                                                     className="truncate">{booking.paymentStatus}</span>
-                                    </span>
+                                                            </span>
                                                         </div>
                                                         <div className="min-w-0">
                                                             <span
-                                                                className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] block mb-1 truncate">Booking Date</span>
+                                                                className="text-zinc-500 text-[8px] md:text-[9px] uppercase tracking-[0.1em] md:tracking-[0.2em] block mb-0.5 md:mb-1 truncate">Booking Date</span>
                                                             <span
-                                                                className="text-zinc-300 font-bold uppercase tracking-wider truncate">
-                                        {formatDateForDisplay(booking.bookingDate)}
-                                    </span>
+                                                                className="text-zinc-300 font-bold uppercase tracking-wide md:tracking-wider truncate">
+                                                                {formatDateForDisplay(booking.bookingDate)}
+                                                            </span>
                                                         </div>
-                                                        {/* Mobile Price View */}
+                                                        {/* Mobile Only Price View */}
                                                         <div
-                                                            className="col-span-2 md:hidden mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                                                            className="col-span-2 md:hidden mt-1 sm:mt-2 pt-2 sm:pt-3 border-t border-white/5">
                                                             <span
-                                                                className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] block mb-1">Total Paid</span>
+                                                                className="text-zinc-500 text-[8px] uppercase tracking-[0.1em] block mb-0.5">Total Paid</span>
                                                             <span
-                                                                className="font-heading text-lg font-black text-white flex items-center tracking-tighter">
-                                        <IndianRupee size={16} className="text-orange-500 mr-0.5"/>
-                                                                {booking.totalPrice?.toLocaleString("en-IN")}
-                                    </span>
+                                                                className="font-heading text-base sm:text-lg font-black text-white flex items-center tracking-tighter">
+                                                                <IndianRupee size={14}
+                                                                             className="text-orange-500 mr-0.5 shrink-0"/>
+                                                                <span
+                                                                    className="truncate">{booking.totalPrice?.toLocaleString("en-IN")}</span>
+                                                            </span>
                                                         </div>
                                                     </div>
 
-                                                    {/* Action Buttons - CHANGED TO GRID ON MOBILE TO PREVENT OVERFLOW */}
+                                                    {/* Action Buttons - Mobile Safe Grid */}
                                                     <div
-                                                        className="mt-auto grid grid-cols-1 sm:grid-cols-2 xl:flex xl:flex-wrap gap-3">
+                                                        className="mt-auto grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2 md:gap-3">
                                                         {booking.paymentStatus === 'PENDING' && booking.bookingStatus !== 'CANCELLED' && (
                                                             <Link href={`/bookings/${booking.bookingId}/pay`}
-                                                                  className="w-full xl:flex-1 py-3.5 sm:py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(234,88,12,0.3)]">
-                                                                <CreditCard size={14} className="shrink-0"/> Resume
-                                                                Payment
+                                                                  className="w-full lg:flex-1 py-3 md:py-3.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[9px] sm:text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-1.5 md:gap-2 shadow-[0_0_15px_rgba(234,88,12,0.3)]">
+                                                                <CreditCard size={12}
+                                                                            className="shrink-0 md:w-3.5 md:h-3.5"/>
+                                                                <span className="truncate">Resume Payment</span>
                                                             </Link>
                                                         )}
 
                                                         {canReview && (
                                                             <Link
                                                                 href={booking.tour?.slug ? `/tours/${booking.tour.slug}/review` : "#"}
-                                                                className="w-full xl:flex-1 py-3.5 sm:py-3 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white text-emerald-500 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2">
-                                                                <Star size={14} className="shrink-0"/> Write Review
+                                                                className="w-full lg:flex-1 py-3 md:py-3.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white text-emerald-500 rounded-xl text-[9px] sm:text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-1.5 md:gap-2">
+                                                                <Star size={12} className="shrink-0 md:w-3.5 md:h-3.5"/>
+                                                                <span className="truncate">Write Review</span>
                                                             </Link>
                                                         )}
 
@@ -746,19 +777,19 @@ export default function ProfilePage() {
                                                             <button
                                                                 onClick={() => handleDownloadPass(booking.bookingId)}
                                                                 disabled={downloadingId === booking.bookingId}
-                                                                className="w-full sm:col-span-2 md:hidden py-3.5 sm:py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2">
+                                                                className="w-full sm:col-span-2 md:hidden py-3 md:py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
                                                                 {downloadingId === booking.bookingId ?
-                                                                    <Loader2 size={14}
+                                                                    <Loader2 size={12}
                                                                              className="animate-spin shrink-0"/> :
-                                                                    <Download size={14} className="shrink-0"/>} Download
-                                                                Pass
+                                                                    <Download size={12} className="shrink-0"/>}
+                                                                <span className="truncate">Download Pass</span>
                                                             </button>
                                                         )}
 
                                                         <Link
                                                             href={booking.tour?.slug ? `/tours/${booking.tour.slug}` : "#"}
-                                                            className="w-full sm:col-span-2 xl:col-span-1 xl:flex-1 py-3.5 sm:py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center">
-                                                            View Tour
+                                                            className="w-full sm:col-span-2 lg:col-span-1 lg:flex-1 py-3 md:py-3.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-[9px] sm:text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center">
+                                                            <span className="truncate">View Tour</span>
                                                         </Link>
                                                     </div>
                                                 </div>

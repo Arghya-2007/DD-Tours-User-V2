@@ -49,11 +49,6 @@ export function BottomNav() {
                             <item.icon size={22} strokeWidth={isActive ? 2.5 : 2}
                                        className="transition-all duration-300"/>
                             <span className="text-[10px] font-bold tracking-wide">{item.name}</span>
-
-                            {isActive && (
-                                <div
-                                    className="absolute -bottom-2 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)]"/>
-                            )}
                         </Link>
                     );
                 })}
