@@ -21,8 +21,56 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-    title: "DD Tours & Travels",
-    description: "Experience the world with DD Tours",
+    metadataBase: new URL("https://ddtours.in"), // Replace with your actual domain
+    title: {
+        default: "DD Tours & Travels | Immersive Off-Beat Journeys",
+        template: "%s | DD Tours & Travels",
+    },
+    description: "Experience the world's most breathtaking, safe, and unforgettable travel experiences. From the Spiti Valley to the Kashmir Great Lakes, we handle the logistics so you can live the adventure.",
+    keywords: [
+        "Travel Agency in West Bengal",
+        "DD Tours Ranaghat",
+        "Off-beat India Tours",
+        "Spiti Valley Expedition",
+        "Kashmir Tour Packages",
+        "Varanasi Travel Guide",
+        "Secure Trip Booking"
+    ],
+    authors: [{ name: "DD Tours Team" }],
+    creator: "DD Tours & Travels",
+    openGraph: {
+        type: "website",
+        locale: "en_IN",
+        url: "https://ddtours.in",
+        siteName: "DD Tours & Travels",
+        title: "DD Tours & Travels | Immersive Off-Beat Journeys",
+        description: "Experience the world's most breathtaking, safe, and unforgettable travel experiences. Pack your bags, we have the rest covered.",
+        images: [
+            {
+                url: "/images/hero-1.webp", // Replace with your best cinematic hero image
+                width: 1200,
+                height: 630,
+                alt: "DD Tours Cinematic Travel",
+            },
+        ],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "DD Tours & Travels",
+        description: "Immersive, off-beat, and unforgettable journeys across India.",
+        images: ["/images/hero-1.webp"],
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            "max-video-preview": -1,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+        },
+    },
 };
 
 export default function RootLayout({

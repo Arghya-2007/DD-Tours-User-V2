@@ -178,7 +178,7 @@ export default function AboutPage() {
                         <Globe size={14} className="text-orange-500"/> Exploring Since 2020
                     </div>
 
-                    <h1 className="hero-text font-heading text-4xl sm:text-6xl md:text-7xl lg:text-[7rem] font-black text-white tracking-tighter mb-6 leading-[1] md:leading-[0.85] drop-shadow-[0_0_40px_rgba(0,0,0,1)] uppercase">
+                    <h1 className="hero-text font-heading text-[2rem] sm:text-5xl md:text-7xl lg:text-[7rem] font-black text-white tracking-tighter mb-6 leading-[1] md:leading-[0.85] drop-shadow-[0_0_40px_rgba(0,0,0,1)] uppercase">
                         WE CRAFT <br className="hidden sm:block"/> <span
                         className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">MEMORIES</span>
                     </h1>
@@ -211,7 +211,7 @@ export default function AboutPage() {
                             <div className={`flex justify-center mb-3 sm:mb-4 ${stat.color}`}>
                                 <stat.icon className="w-6 h-6 sm:w-8 sm:h-8"/>
                             </div>
-                            <h3 className="font-heading text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 sm:mb-2 tracking-tighter">{stat.value}</h3>
+                            <h3 className="font-heading text-1xl sm:text-3xl md:text-4xl font-black text-white mb-1 sm:mb-2 tracking-tighter">{stat.value}</h3>
                             <p className="text-zinc-400 font-mono text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] line-clamp-1">{stat.label}</p>
                         </div>
                     ))}

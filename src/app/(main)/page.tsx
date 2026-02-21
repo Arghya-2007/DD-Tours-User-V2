@@ -347,7 +347,7 @@ export default function HomePage() {
                         </h1>
                     </div>
                     <div className="overflow-hidden mb-6 sm:mb-8">
-                        <h1 className="hero-text-line font-heading text-3xl sm:text-6xl md:text-7xl lg:text-[7rem] leading-[0.9] font-black tracking-tighter uppercase drop-shadow-[0_0_30px_rgba(0,0,0,1)] break-words">
+                        <h1 className="hero-text-line font-heading text-[2.1rem] sm:text-6xl md:text-7xl lg:text-[7rem] leading-[0.9] font-black tracking-tighter uppercase drop-shadow-[0_0_30px_rgba(0,0,0,1)] break-words">
                             <span
                                 className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600">UNKNOWN</span>
                         </h1>
