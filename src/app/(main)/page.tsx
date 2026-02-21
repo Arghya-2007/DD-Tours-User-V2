@@ -24,9 +24,9 @@ const heroImages = [
 ];
 
 const memoryImages = [
-    "/images/kashmir.webp", "/images/spiti.webp", "/images/meghalaya.webp", "/images/zanskar.webp",
-    "/images/vrindavan.webp", "/images/varanasi.webp", "/images/kerala.webp", "/images/sikkim.webp",
-    "/images/arunachal.webp", "/images/kedarnath.webp",
+    "/images/memory-1.webp", "/images/memory-2.webp", "/images/memory-3.webp", "/images/memory-4.webp",
+    "/images/memory-5.webp", "/images/memory-6.webp", "/images/memory-7.webp", "/images/memory-8.webp",
+    "/images/memory-9.webp", "/images/memory-10.webp", "/images/memory-11.webp",
 ];
 
 const featuredTours = [
