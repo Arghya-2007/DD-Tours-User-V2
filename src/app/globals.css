@@ -4,12 +4,16 @@
     /* Brand Colors - Vibrant & Adventurous */
     --color-primary: #FF4500;
     --color-primary-hover: #FF6347;
-    --color-accent: #E63946; /* A deep red for gradients and badges */
-    /* Dark Theme Depths (Creates a 3D feel for cards and layers) */
-    --color-background: #050505; /* Deepest black for the main body */
-    --color-surface: #0a0a0a; /* Slightly lighter for cards/sections */
-    --color-surface-hover: #171717; /* For interactive hover states */
+    --color-accent: #E63946;
+
+    /* Dark Theme Depths */
+    --color-background: #050505;
+    --color-surface: #0a0a0a;
+    --color-surface-hover: #171717;
     --color-sidebar: #0f0f0f;
+
+    --font-heading: var(--font-heading);
+    --font-body: var(--font-body);
 
     --animate-marquee: marquee 25s linear infinite;
 
@@ -25,16 +29,19 @@
 
 /* Base Setup */
 html {
-    /* Smooth scrolling native fallback before GSAP takes over */
     scroll-behavior: smooth;
 }
 
 body {
     background-color: var(--color-background);
-    /* Using a slightly off-white instead of pure white reduces eye strain on dark themes */
     color: #F3F4F6;
-    /* CRITICAL FOR GSAP: Prevents the page from wiggling left/right during complex animations */
     overflow-x: hidden;
+    font-family: var(--font-body), serif; /* Apply body font */
+
+    /* 🔥 CRITICAL FOR GSAP: Smooths out text edges during 3D rotations */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 /* Premium Touch: Custom Highlight Color */
@@ -43,15 +50,20 @@ body {
     color: #ffffff;
 }
 
-/* GSAP Helper:
-  Apply this class to elements you plan to animate.
-  It prevents the "Flash of Unstyled Content" (seeing the element before the animation starts).
-*/
+/* GSAP Helpers */
 .visibility-hidden {
     visibility: hidden;
 }
 
-/* Custom Scrollbar for a seamless dark theme experience */
+/* 🔥 NEW: Apply this to text elements rotating in 3D space */
+.gsap-3d-text {
+    will-change: transform, opacity;
+    /* Prevents the text from flickering or snapping during 3D rotations */
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 10px;
 }

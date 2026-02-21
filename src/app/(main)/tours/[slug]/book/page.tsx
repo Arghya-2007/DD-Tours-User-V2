@@ -40,7 +40,9 @@ export default function BookingPage() {
     const params = useParams();
     const router = useRouter();
     const {user, isAuthenticated} = useAuthStore();
+
     const containerRef = useRef<HTMLDivElement>(null);
+    const hasAnimated = useRef(false); // 🔥 The bulletproof animation lock
 
     // Data States
     const [tour, setTour] = useState<Tour | null>(null);
@@ -67,7 +69,7 @@ export default function BookingPage() {
                 const {data} = await api.get(`/tours/${params.slug}`);
                 setTour(data.data);
             } catch (err) {
-                setError("Failed to load mission details. The signal might be lost.");
+                setError("Failed to load tour details. Please try again.");
             } finally {
                 setLoading(false);
             }
@@ -75,9 +77,13 @@ export default function BookingPage() {
         if (params.slug) fetchTour();
     }, [params.slug, isAuthenticated, router]);
 
-    // Highly Stable GSAP Entrance Animation
+    // 🔥 FIX: Locked GSAP Entrance Animation
     useGSAP(() => {
-        if (loading || !tour || !containerRef.current) return;
+        // Wait until loading is done, the tour exists, and ensure it hasn't animated yet
+        if (loading || !tour || !containerRef.current || hasAnimated.current) return;
+
+        // Lock the animation so React Strict Mode or state changes can't re-trigger it
+        hasAnimated.current = true;
 
         const tl = gsap.timeline({defaults: {ease: "expo.out"}});
 
@@ -152,7 +158,7 @@ export default function BookingPage() {
             const newBookingId = response.data.data.bookingId;
             router.push(`/bookings/${newBookingId}/pay`);
         } catch (err: any) {
-            setError(err.response?.data?.message || err.response?.data?.issues?.[0]?.message || "Transmission failed. Please verify your details and try again.");
+            setError(err.response?.data?.message || err.response?.data?.issues?.[0]?.message || "Booking failed. Please verify your details and try again.");
             setIsSubmitting(false);
         }
     };
@@ -163,29 +169,28 @@ export default function BookingPage() {
                 <div className="absolute w-24 h-24 border-t-4 border-orange-600 rounded-full animate-spin"></div>
                 <ShieldCheck size={36} className="text-orange-500 animate-pulse"/>
             </div>
-            <p className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] animate-pulse">Securing
-                Connection...</p>
+            <p className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] animate-pulse">Preparing Your
+                Journey...</p>
         </div>
     );
 
     if (!tour) return (
         <div className="text-center py-40 h-screen flex flex-col items-center justify-center bg-background">
             <AlertCircle size={64} className="text-zinc-700 mb-6"/>
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-4 uppercase tracking-tight">Mission
+            <h2 className="font-heading text-3xl md:text-4xl font-black text-white mb-4 uppercase tracking-tight">Tour
                 Unavailable</h2>
             <Link href="/tours"
                   className="px-10 py-4 bg-orange-600 rounded-full text-white font-black uppercase tracking-widest text-sm hover:bg-orange-700 transition-all shadow-lg">
-                Return to Archive
+                Back to Tours
             </Link>
         </div>
     );
 
     const totalPrice = tour.tourPrice * guestsCount;
 
-    // WhatsApp Message Logic
-    const whatsappNumber = "+919876543210"; // Replace with your actual number
+    const whatsappNumber = "+919876543210";
     const whatsappMessage = encodeURIComponent(
-        `Hi DD Tours! 🧭 I am currently finalizing my booking for the "${tour.tourTitle}" mission. Could you please help me with a quick question before I proceed to checkout?`
+        `Hi DD Tours! 🧭 I am currently finalizing my booking for the "${tour.tourTitle}" tour. Could you please help me with a quick question before I proceed to checkout?`
     );
     const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
 
@@ -193,7 +198,6 @@ export default function BookingPage() {
         <div ref={containerRef}
              className="min-h-screen bg-background relative overflow-hidden pb-24 md:pb-32 selection:bg-orange-600 selection:text-white">
 
-            {/* Abstract Background Glows */}
             <div
                 className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-orange-600/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
             <div
@@ -201,14 +205,12 @@ export default function BookingPage() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 relative z-10">
 
-                {/* Top Navigation & Progress */}
                 <div className="anim-header flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                     <button onClick={() => router.back()}
                             className="flex items-center gap-2 text-zinc-400 hover:text-orange-500 font-bold text-xs uppercase tracking-widest transition-colors group w-max bg-white/5 px-4 py-2 rounded-full border border-white/10">
                         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform"/> Cancel
                     </button>
 
-                    {/* Progress Tracker */}
                     <div className="flex items-center gap-3 md:gap-4 text-xs font-black uppercase tracking-widest">
                         <div className="flex items-center gap-2 text-orange-500">
                             <span
@@ -224,21 +226,19 @@ export default function BookingPage() {
                     </div>
                 </div>
 
-                {/* Title */}
                 <div className="anim-header mb-10 md:mb-14">
                     <div
                         className="flex items-center gap-2 text-emerald-500 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mb-3">
                         <Lock size={14}/> 256-Bit Encrypted Checkout
                     </div>
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white uppercase tracking-tighter leading-none drop-shadow-xl">
-                        Finalize <span
-                        className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">Deployment</span>
+                    <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-black text-white uppercase tracking-tighter leading-none drop-shadow-xl">
+                        Secure Your <span
+                        className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">Spot</span>
                     </h1>
                 </div>
 
                 <form onSubmit={handleInitiateBooking} className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
 
-                    {/* LEFT COLUMN: User Input Form */}
                     <div className="lg:col-span-7 xl:col-span-8 space-y-6 md:space-y-8">
 
                         {error && (
@@ -249,13 +249,12 @@ export default function BookingPage() {
                             </div>
                         )}
 
-                        {/* Section 1: Contact Info */}
                         <div
                             className="anim-card bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-5 md:p-8 shadow-2xl">
-                            <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight mb-6 md:mb-8 flex items-center gap-3">
+                            <h2 className="font-heading text-xl md:text-2xl font-black text-white uppercase tracking-tight mb-6 md:mb-8 flex items-center gap-3">
                                 <ShieldCheck
                                     className="text-orange-500 w-6 h-6 md:w-8 md:h-8 drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]"/>
-                                Primary Commander
+                                Lead Traveler
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
                                 <div className="space-y-2">
@@ -283,18 +282,16 @@ export default function BookingPage() {
                             </div>
                         </div>
 
-                        {/* Section 2: Guest Details */}
                         <div
                             className="anim-card bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-5 md:p-8 shadow-2xl">
                             <div
                                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-8 md:mb-10 pb-6 md:pb-8 border-b border-white/10">
-                                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
+                                <h2 className="font-heading text-xl md:text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
                                     <Users
                                         className="text-orange-500 w-6 h-6 md:w-8 md:h-8 drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]"/>
-                                    Squad Roster
+                                    Guest Details
                                 </h2>
 
-                                {/* Premium Guest Counter */}
                                 <div
                                     className="flex items-center gap-4 bg-black/40 border border-white/10 rounded-full p-1.5 shadow-inner w-max">
                                     <button type="button" onClick={() => handleGuestCountChange(guestsCount - 1)}
@@ -312,7 +309,6 @@ export default function BookingPage() {
                                     <div key={index}
                                          className="p-5 md:p-6 rounded-2xl border border-white/10 bg-black/20 relative overflow-hidden group hover:border-white/20 transition-all shadow-inner">
 
-                                        {/* Decorative Number */}
                                         <div
                                             className="absolute -top-4 -right-2 text-7xl md:text-8xl font-black text-white/5 pointer-events-none select-none z-0 transition-transform group-hover:scale-110">
                                             {String(index + 1).padStart(2, '0')}
@@ -320,10 +316,10 @@ export default function BookingPage() {
 
                                         <div className="relative z-10">
                                             <div className="flex items-center gap-3 mb-5 md:mb-6">
-                                    <span
-                                        className="bg-orange-500/20 text-orange-500 px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-[0.2em] border border-orange-500/20 shadow-sm">
-                                        Explorer {index + 1}
-                                    </span>
+                                                <span
+                                                    className="bg-orange-500/20 text-orange-500 px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-[0.2em] border border-orange-500/20 shadow-sm">
+                                                    Guest {index + 1}
+                                                </span>
                                                 {index === 0 && <span
                                                     className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">(Primary)</span>}
                                             </div>
@@ -342,12 +338,9 @@ export default function BookingPage() {
                                                            className="w-full bg-white/5 border border-white/10 rounded-xl p-3.5 text-base text-white placeholder:text-zinc-600 focus:border-orange-500 focus:bg-white/10 focus:outline-none transition-all"/>
                                                 </div>
                                                 <div className="sm:col-span-3 md:col-span-4 space-y-1.5 relative">
-                                                    <select
-                                                        required
-                                                        value={guest.gender}
-                                                        onChange={(e) => handleGuestDetailChange(index, "gender", e.target.value)}
-                                                        className="w-full appearance-none bg-white/5 border border-white/10 rounded-xl p-3.5 text-base text-white focus:border-orange-500 focus:bg-white/10 focus:outline-none transition-all [&>option]:bg-[#141414]"
-                                                    >
+                                                    <select required value={guest.gender}
+                                                            onChange={(e) => handleGuestDetailChange(index, "gender", e.target.value)}
+                                                            className="w-full appearance-none bg-white/5 border border-white/10 rounded-xl p-3.5 text-base text-white focus:border-orange-500 focus:bg-white/10 focus:outline-none transition-all [&>option]:bg-[#141414]">
                                                         <option value="" disabled className="text-zinc-600">Gender
                                                         </option>
                                                         <option value="Male">Male</option>
@@ -371,20 +364,17 @@ export default function BookingPage() {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: Sticky Order Summary */}
                     <div className="lg:col-span-5 xl:col-span-4 relative mt-4 lg:mt-0">
                         <div
                             className="anim-sidebar lg:sticky lg:top-28 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-6 md:p-8 shadow-2xl shadow-black/50 overflow-hidden">
 
-                            {/* Abstract internal glow */}
                             <div
                                 className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none"></div>
 
-                            <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-tight mb-6 md:mb-8 flex items-center gap-2">
+                            <h3 className="font-heading text-lg md:text-xl font-black text-white uppercase tracking-tight mb-6 md:mb-8 flex items-center gap-2">
                                 <Sparkles size={18} className="text-orange-500"/> Order Summary
                             </h3>
 
-                            {/* Mini Tour Poster */}
                             <div
                                 className="flex gap-4 mb-6 md:mb-8 pb-6 md:pb-8 border-b border-white/10 relative z-10">
                                 <div
@@ -393,7 +383,7 @@ export default function BookingPage() {
                                            className="object-cover"/>
                                 </div>
                                 <div className="flex flex-col justify-center">
-                                    <h4 className="text-white font-black text-base md:text-lg leading-tight uppercase line-clamp-2 mb-2">{tour.tourTitle}</h4>
+                                    <h4 className="font-heading text-white font-black text-base md:text-lg leading-tight uppercase line-clamp-2 mb-2">{tour.tourTitle}</h4>
                                     <div
                                         className="flex items-center gap-1.5 text-zinc-400 text-[9px] md:text-[10px] font-bold tracking-widest">
                                         <MapPin size={12} className="text-orange-500 shrink-0"/> <span
@@ -402,7 +392,6 @@ export default function BookingPage() {
                                 </div>
                             </div>
 
-                            {/* Tour Details Breakdown */}
                             <div
                                 className="space-y-4 md:space-y-5 mb-6 md:mb-8 pb-6 md:pb-8 border-b border-white/10 relative z-10">
                                 <div className="flex items-center justify-between text-sm">
@@ -412,14 +401,14 @@ export default function BookingPage() {
                                     </div>
                                     <span
                                         className="text-white font-bold text-[10px] md:text-xs uppercase tracking-wider">
-                              {tour.isFixedDate && tour.fixedDate
-                                  ? new Date(tour.fixedDate).toLocaleDateString('en-GB', {
-                                      day: '2-digit',
-                                      month: 'short',
-                                      year: 'numeric'
-                                  })
-                                  : "Flexible Dates"}
-                          </span>
+                                        {tour.isFixedDate && tour.fixedDate
+                                            ? new Date(tour.fixedDate).toLocaleDateString('en-GB', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                year: 'numeric'
+                                            })
+                                            : "Flexible Dates"}
+                                    </span>
                                 </div>
 
                                 <div className="flex items-center justify-between text-sm">
@@ -441,13 +430,12 @@ export default function BookingPage() {
                                 </div>
                             </div>
 
-                            {/* Price Breakdown */}
                             <div
                                 className="space-y-3 md:space-y-4 mb-6 md:mb-8 pb-6 md:pb-8 border-b border-white/10 relative z-10">
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-zinc-400 font-medium">Base Price (x{guestsCount})</span>
                                     <span
-                                        className="text-white font-bold flex items-center tracking-tight text-sm md:text-base"><IndianRupee
+                                        className="font-heading text-white font-black flex items-center tracking-tight text-sm md:text-base"><IndianRupee
                                         size={14}/> {tour.tourPrice.toLocaleString("en-IN")}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
@@ -457,15 +445,14 @@ export default function BookingPage() {
                                 </div>
                             </div>
 
-                            {/* Total */}
                             <div className="flex justify-between items-end mb-8 relative z-10">
                                 <span
-                                    className="text-zinc-500 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] mb-1">Final Investment</span>
+                                    className="text-zinc-500 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] mb-1">Total Amount</span>
                                 <span
-                                    className="text-3xl md:text-4xl font-black text-white flex items-center tracking-tighter leading-none drop-shadow-md">
-                          <IndianRupee size={24}
-                                       className="text-orange-500 mr-0.5 md:mr-1"/> {totalPrice.toLocaleString("en-IN")}
-                      </span>
+                                    className="font-heading text-3xl md:text-4xl font-black text-white flex items-center tracking-tighter leading-none drop-shadow-md">
+                                    <IndianRupee size={24}
+                                                 className="text-orange-500 mr-0.5 md:mr-1"/> {totalPrice.toLocaleString("en-IN")}
+                                </span>
                             </div>
 
                             <button
@@ -473,16 +460,17 @@ export default function BookingPage() {
                                 disabled={isSubmitting}
                                 className="relative w-full py-4 md:py-5 bg-orange-600 disabled:bg-white/5 disabled:text-zinc-500 text-white font-black uppercase tracking-[0.15em] md:tracking-[0.2em] rounded-xl md:rounded-2xl transition-all active:scale-[0.98] overflow-hidden group border disabled:border-white/10 border-transparent shadow-[0_0_30px_rgba(234,88,12,0.3)] disabled:shadow-none z-10"
                             >
-                                {/* Gradient Hover Effect */}
                                 <div
                                     className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-out z-0"></div>
 
                                 <span
                                     className="relative z-10 flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
-                          {isSubmitting ? <><Loader2 size={18} className="animate-spin"/> Transmitting...</> : <>
-                              <CreditCard size={18} className="group-hover:scale-110 transition-transform"/> Proceed to
-                              Pay</>}
-                      </span>
+                                    {isSubmitting ? <><Loader2 size={18}
+                                                               className="animate-spin"/> Processing...</> : <>
+                                        <CreditCard size={18}
+                                                    className="group-hover:scale-110 transition-transform"/> Proceed to
+                                        Pay</>}
+                                </span>
                             </button>
 
                             <a
@@ -495,7 +483,6 @@ export default function BookingPage() {
                                 Ask an Expert
                             </a>
 
-                            {/* Trust Badges */}
                             <div className="mt-6 space-y-3 relative z-10">
                                 <div
                                     className="flex items-center justify-center gap-2 text-[9px] md:text-[10px] text-zinc-400 uppercase font-bold tracking-widest">

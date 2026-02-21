@@ -96,7 +96,7 @@ export const Footer = () => {
                                 className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-accent flex items-center justify-center font-black text-white text-xl shadow-[0_0_20px_var(--color-primary)] transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
                                 DD
                             </div>
-                            <span className="text-2xl font-black text-white tracking-tighter truncate max-w-[200px]"
+                            <span className="text-2xl font-black text-white tracking-tighter truncate max-w-50"
                                   title={sysSettings.siteName}>
                                 {sysSettings.siteName.split(' ')[0]} <span
                                 className="text-primary">{sysSettings.siteName.split(' ').slice(1).join(' ')}</span>
@@ -199,13 +199,13 @@ export const Footer = () => {
                         © {new Date().getFullYear()} {sysSettings.siteName}. All rights reserved.
                     </p>
                     <div className="flex gap-6">
-                        <Link href="#"
+                        <Link href="./privacy"
                               className="text-zinc-500 hover:text-primary font-medium text-xs transition-colors">Privacy
                             Policy</Link>
-                        <Link href="#"
+                        <Link href="./terms"
                               className="text-zinc-500 hover:text-primary font-medium text-xs transition-colors">Terms
                             of Service</Link>
-                        <Link href="#"
+                        <Link href="./cookies"
                               className="text-zinc-500 hover:text-primary font-medium text-xs transition-colors">Cookies</Link>
                     </div>
                 </div>

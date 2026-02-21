@@ -85,11 +85,10 @@ export default function TourDetailsPage() {
         const customScroller = document.querySelector("#main-scroll-container");
         const scrollerTarget = customScroller || window;
 
-        // --- MULTI-STATE CINEMATIC IMAGE TRANSITIONS ---
+// --- MULTI-STATE CINEMATIC IMAGE TRANSITIONS ---
         const images = gsap.utils.toArray(".hero-auto-slide") as HTMLElement[];
         if (images.length > 1) {
 
-            // Initial State: Hide all except first
             gsap.set(images, {opacity: 0, zIndex: 0});
             gsap.set(images[0], {opacity: 1, zIndex: 1});
 
@@ -104,7 +103,7 @@ export default function TourDetailsPage() {
 
                 const fadeTl = gsap.timeline({
                     onComplete: () => {
-                        gsap.set(currentImg, {opacity: 0}); // Clean up old image
+                        gsap.set(currentImg, {opacity: 0}); // Clean up
                         currentIndex = nextIndex;
                         setTimeout(playNextImage, displayDuration * 1000);
                     }
@@ -113,11 +112,11 @@ export default function TourDetailsPage() {
                 gsap.set(nextImg, {zIndex: 2, opacity: 1});
                 gsap.set(currentImg, {zIndex: 1});
 
-                // Choose a crazy transition based on the index!
-                const animType = nextIndex % 3;
+                // 🚨 Updated to cycle through 5 animations
+                const animType = nextIndex % 5;
 
                 if (animType === 0) {
-                    // 💥 1. THE CYBER SLICE (Angled Blade Wipe)
+                    // 💥 1. THE CYBER SLICE
                     fadeTl.fromTo(nextImg,
                         {
                             clipPath: "polygon(0% 0%, 0% 0%, -20% 100%, -20% 100%)",
@@ -140,7 +139,7 @@ export default function TourDetailsPage() {
                             ease: "expo.inOut"
                         }, 0);
                 } else if (animType === 1) {
-                    // 💥 2. THE VERTICAL BLAST (CRT Monitor Turn-on)
+                    // 💥 2. THE VERTICAL BLAST
                     fadeTl.fromTo(nextImg,
                         {clipPath: "inset(50% 0% 50% 0%)", scale: 2, filter: "brightness(3)"},
                         {
@@ -158,8 +157,8 @@ export default function TourDetailsPage() {
                             duration: transitionDuration,
                             ease: "power4.inOut"
                         }, 0);
-                } else {
-                    // 💥 3. THE LENS SNAP (Circular Spin Reveal)
+                } else if (animType === 2) {
+                    // 💥 3. THE LENS SNAP
                     fadeTl.fromTo(nextImg,
                         {
                             clipPath: "circle(0% at 50% 50%)",
@@ -177,6 +176,41 @@ export default function TourDetailsPage() {
                         }, 0
                     )
                         .to(currentImg, {scale: 1.2, duration: transitionDuration, ease: "expo.inOut"}, 0);
+                } else if (animType === 3) {
+                    // 💥 4. NEW: THE BLOCK LOAD (Digital Matrix Glitch)
+                    // Uses 'steps(8)' to force the animation to stutter block-by-block
+                    fadeTl.fromTo(nextImg,
+                        {clipPath: "inset(100% 0% 0% 0%)", scale: 1.2, filter: "hue-rotate(90deg) contrast(2)"},
+                        {
+                            clipPath: "inset(0% 0% 0% 0%)",
+                            scale: 1,
+                            filter: "hue-rotate(0deg) contrast(1)",
+                            duration: transitionDuration,
+                            ease: "steps(4)"
+                        }, 0
+                    )
+                        .to(currentImg, {scale: 0.9, opacity: 0, duration: transitionDuration, ease: "steps(4)"}, 0);
+                } else {
+                    // 💥 5. NEW: THE PARTICLE IMPLOSION (Gooey Coalescence)
+                    // Uses extreme blur and contrast to simulate pixels melting together
+                    fadeTl.fromTo(nextImg,
+                        {scale: 2.5, filter: "blur(40px) brightness(3) contrast(5)", opacity: 0, rotationZ: 15},
+                        {
+                            scale: 1,
+                            filter: "blur(0px) brightness(1) contrast(1)",
+                            opacity: 1,
+                            rotationZ: 0,
+                            duration: transitionDuration,
+                            ease: "expo.inOut"
+                        }, 0
+                    )
+                        .to(currentImg, {
+                            scale: 0.5,
+                            filter: "blur(20px)",
+                            opacity: 0,
+                            duration: transitionDuration,
+                            ease: "expo.inOut"
+                        }, 0);
                 }
             };
 
@@ -185,47 +219,28 @@ export default function TourDetailsPage() {
         }
 
         // --- WILD CONTENT REVEALS ---
-
-        // Stats Drop in with extreme elasticity and randomized rotation
         gsap.fromTo(".stat-card",
             {y: -80, opacity: 0, rotationZ: () => Math.random() * 20 - 10, scale: 0.5},
             {
-                y: 0,
-                opacity: 1,
-                rotationZ: 0,
-                scale: 1,
-                duration: 1.2,
-                stagger: 0.1,
-                ease: "elastic.out(1, 0.5)",
+                y: 0, opacity: 1, rotationZ: 0, scale: 1, duration: 1.2, stagger: 0.1, ease: "elastic.out(1, 0.5)",
                 scrollTrigger: {trigger: ".stats-grid", scroller: scrollerTarget, start: "top 85%"}
             }
         );
 
-        // Blocks 3D flip up
         gsap.utils.toArray(".content-block").forEach((block: any) => {
             gsap.fromTo(block as HTMLElement,
                 {y: 80, opacity: 0, rotationX: 45, transformOrigin: "50% 100%"},
                 {
-                    y: 0,
-                    opacity: 1,
-                    rotationX: 0,
-                    duration: 1.2,
-                    ease: "power3.out",
+                    y: 0, opacity: 1, rotationX: 0, duration: 1.2, ease: "power3.out",
                     scrollTrigger: {trigger: block as HTMLElement, scroller: scrollerTarget, start: "top 85%"}
                 }
             );
         });
 
-        // Pills pop out like explosions
         gsap.fromTo(".pop-pill",
             {scale: 0, opacity: 0, rotationZ: 45},
             {
-                scale: 1,
-                opacity: 1,
-                rotationZ: 0,
-                duration: 0.6,
-                stagger: 0.05,
-                ease: "back.out(2.5)",
+                scale: 1, opacity: 1, rotationZ: 0, duration: 0.6, stagger: 0.05, ease: "back.out(2.5)",
                 scrollTrigger: {trigger: ".places-container", scroller: scrollerTarget, start: "top 85%"}
             }
         );
@@ -233,18 +248,11 @@ export default function TourDetailsPage() {
         gsap.fromTo(".booking-card",
             {x: 100, opacity: 0, rotationY: -30, scale: 0.9},
             {
-                x: 0,
-                opacity: 1,
-                rotationY: 0,
-                scale: 1,
-                duration: 1.2,
-                delay: 0.2,
-                ease: "expo.out",
+                x: 0, opacity: 1, rotationY: 0, scale: 1, duration: 1.2, delay: 0.2, ease: "expo.out",
                 scrollTrigger: {trigger: ".booking-card", scroller: scrollerTarget, start: "top 90%"}
             }
         );
 
-        // Ambient Background Pulse
         gsap.to(".bg-glow", {scale: 1.2, opacity: 0.8, duration: 4, repeat: -1, yoyo: true, ease: "sine.inOut"});
 
     }, {scope: containerRef, dependencies: [loading, tour]});
@@ -261,20 +269,16 @@ export default function TourDetailsPage() {
             rotationX: -(y / rect.height) * strength,
             duration: 0.4,
             ease: "power2.out",
-            transformPerspective: 800, // Deep perspective for pop
+            transformPerspective: 800,
         });
     };
 
     const handle3DLeave = (e: React.MouseEvent<HTMLElement>) => {
         gsap.to(e.currentTarget, {
-            rotationY: 0,
-            rotationX: 0,
-            duration: 0.8,
-            ease: "elastic.out(1, 0.5)",
+            rotationY: 0, rotationX: 0, duration: 0.8, ease: "elastic.out(1, 0.5)",
         });
     };
 
-    // Helper Functions
     const getDaysLeft = (deadline?: string | null) => {
         if (!deadline) return null;
         const days = Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
@@ -300,10 +304,13 @@ export default function TourDetailsPage() {
     if (!tour) return (
         <div className="text-center py-40 h-screen flex flex-col items-center justify-center bg-background">
             <Map size={64} className="text-zinc-700 mb-6"/>
-            <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tight">Tour Not Found</h2>
+            {/* 🔥 Typography Fix */}
+            <h2 className="font-heading text-4xl font-black text-white mb-4 uppercase tracking-tight">Tour Not
+                Found</h2>
+            {/* 🔥 Copy Fix */}
             <Link href="/tours"
                   className="px-10 py-4 bg-white/10 rounded-full text-white font-bold uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
-                Browse All Tours
+                Explore Other Destinations
             </Link>
         </div>
     );
@@ -325,26 +332,19 @@ export default function TourDetailsPage() {
         <div ref={containerRef}
              className="pb-20 md:pb-32 w-full bg-[#050505] text-white relative selection:bg-orange-600 selection:text-white overflow-hidden perspective-[1000px]">
 
-            {/* Ambient Background Glows */}
             <div
                 className="bg-glow absolute top-[10%] left-[-10%] w-[50vw] h-[50vw] bg-orange-600/15 blur-[150px] rounded-full pointer-events-none mix-blend-screen z-0"></div>
 
             {/* ==================================================== */}
-            {/* 🖼️ HERO GALLERY (Crazy 3-State GSAP Transitions)       */}
+            {/* 🖼️ HERO GALLERY                                      */}
             {/* ==================================================== */}
-            <div
-                onMouseMove={(e) => handle3DHover(e, 3)}
-                onMouseLeave={handle3DLeave}
-                className="relative w-full h-[65svh] md:h-[80vh] bg-black overflow-hidden rounded-b-[2rem] md:rounded-b-[4rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-10 cursor-default"
-            >
-                <button
-                    onClick={() => router.back()}
-                    className="absolute top-6 left-4 md:top-10 md:left-10 z-[100] bg-black/40 backdrop-blur-md px-5 py-3 rounded-full text-zinc-200 font-bold text-xs uppercase tracking-widest border border-white/10 hover:border-orange-500 hover:text-orange-500 transition-all active:scale-95 flex items-center gap-2"
-                >
+            <div onMouseMove={(e) => handle3DHover(e, 3)} onMouseLeave={handle3DLeave}
+                 className="relative w-full h-[65svh] md:h-[80vh] bg-black overflow-hidden rounded-b-[2rem] md:rounded-b-[4rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-10 cursor-default">
+                <button onClick={() => router.back()}
+                        className="absolute top-6 left-4 md:top-10 md:left-10 z-[100] bg-black/40 backdrop-blur-md px-5 py-3 rounded-full text-zinc-200 font-bold text-xs uppercase tracking-widest border border-white/10 hover:border-orange-500 hover:text-orange-500 transition-all active:scale-95 flex items-center gap-2">
                     <ArrowLeft size={16}/> Back
                 </button>
 
-                {/* GSAP Managed Image Container */}
                 <div className="absolute inset-0 w-full h-full opacity-90 pointer-events-none">
                     {images.map((img, index) => (
                         <div key={`hero-img-${index}`} className="hero-auto-slide absolute inset-0 w-full h-full">
@@ -373,7 +373,8 @@ export default function TourDetailsPage() {
                                 </span>
                             )}
                         </div>
-                        <h1 className="text-5xl md:text-7xl lg:text-[6.5rem] font-black text-white leading-[1] md:leading-[0.9] uppercase drop-shadow-2xl tracking-tighter">
+                        {/* 🔥 Typography Fix & Scale Adjustment for Wide Fonts */}
+                        <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black text-white leading-[1] md:leading-[0.9] uppercase drop-shadow-2xl tracking-tighter">
                             {tour.tourTitle}
                         </h1>
                     </div>
@@ -389,7 +390,7 @@ export default function TourDetailsPage() {
                 {/* LEFT COLUMN: Details */}
                 <div className="lg:col-span-7 xl:col-span-8 space-y-12 md:space-y-16">
 
-                    {/* Stats Grid (3D Hover applied to each) */}
+                    {/* Stats Grid */}
                     <div className="stats-grid grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                         {[
                             {icon: Clock, label: "Duration", val: tour.tourDuration, color: "text-orange-500"},
@@ -402,12 +403,8 @@ export default function TourDetailsPage() {
                             },
                             {icon: ShieldCheck, label: "Status", val: tour.tourStatus, color: "text-purple-500"}
                         ].map((stat, i) => (
-                            <div
-                                key={i}
-                                onMouseMove={(e) => handle3DHover(e, 25)}
-                                onMouseLeave={handle3DLeave}
-                                className="stat-card bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded-3xl flex flex-col items-center text-center gap-2 hover:bg-white/10 transition-colors shadow-lg cursor-default"
-                            >
+                            <div key={i} onMouseMove={(e) => handle3DHover(e, 25)} onMouseLeave={handle3DLeave}
+                                 className="stat-card bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded-3xl flex flex-col items-center text-center gap-2 hover:bg-white/10 transition-colors shadow-lg cursor-default">
                                 <stat.icon size={28} className={stat.color}/>
                                 <span
                                     className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{stat.label}</span>
@@ -419,7 +416,8 @@ export default function TourDetailsPage() {
                     {/* Tour Overview */}
                     <div
                         className="content-block desc-container relative bg-[#111]/50 border border-white/5 p-6 md:p-10 rounded-[2rem] shadow-2xl">
-                        <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-8 flex items-center gap-4">
+                        {/* 🔥 Typography Fix */}
+                        <h2 className="font-heading text-2xl md:text-4xl font-black text-white uppercase tracking-tight mb-8 flex items-center gap-4">
                             <span
                                 className="w-1.5 h-8 bg-orange-600 rounded-full shadow-[0_0_15px_rgba(234,88,12,0.8)]"/>
                             Tour Overview
@@ -448,19 +446,16 @@ export default function TourDetailsPage() {
                     {/* Places Covered */}
                     {tour.coveredPlaces && tour.coveredPlaces.length > 0 && (
                         <div className="content-block places-container relative">
-                            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-8 flex items-center gap-4">
+                            {/* 🔥 Typography Fix */}
+                            <h2 className="font-heading text-2xl md:text-4xl font-black text-white uppercase tracking-tight mb-8 flex items-center gap-4">
                                 <span
                                     className="w-1.5 h-8 bg-orange-600 rounded-full shadow-[0_0_15px_rgba(234,88,12,0.8)]"/>
                                 Places You'll Visit
                             </h2>
                             <div className="flex flex-wrap gap-3">
                                 {tour.coveredPlaces.map((place, i) => (
-                                    <div
-                                        key={i}
-                                        onMouseMove={(e) => handle3DHover(e, 30)}
-                                        onMouseLeave={handle3DLeave}
-                                        className="pop-pill bg-white/5 border border-white/10 px-5 py-3 rounded-xl flex items-center gap-2.5 text-zinc-200 text-sm font-bold tracking-wide shadow-lg hover:border-orange-500/50 cursor-default"
-                                    >
+                                    <div key={i} onMouseMove={(e) => handle3DHover(e, 30)} onMouseLeave={handle3DLeave}
+                                         className="pop-pill bg-white/5 border border-white/10 px-5 py-3 rounded-xl flex items-center gap-2.5 text-zinc-200 text-sm font-bold tracking-wide shadow-lg hover:border-orange-500/50 cursor-default">
                                         <MapPin size={16} className="text-orange-500"/> {place}
                                     </div>
                                 ))}
@@ -472,7 +467,8 @@ export default function TourDetailsPage() {
                     {tour.includedItems && tour.includedItems.length > 0 && (
                         <div
                             className="content-block places-container relative bg-[#111]/50 border border-white/5 rounded-[2rem] p-6 md:p-10 shadow-2xl">
-                            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-8 flex items-center gap-4">
+                            {/* 🔥 Typography Fix */}
+                            <h2 className="font-heading text-2xl md:text-4xl font-black text-white uppercase tracking-tight mb-8 flex items-center gap-4">
                                 <span
                                     className="w-1.5 h-8 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.8)]"/>
                                 What's Included
@@ -480,12 +476,8 @@ export default function TourDetailsPage() {
 
                             <ul className="flex flex-wrap gap-3">
                                 {tour.includedItems.map((item, i) => (
-                                    <li
-                                        key={i}
-                                        onMouseMove={(e) => handle3DHover(e, 30)}
-                                        onMouseLeave={handle3DLeave}
-                                        className="pop-pill flex items-center gap-2.5 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2.5 rounded-full font-bold tracking-wide text-emerald-400 text-sm shadow-lg cursor-default"
-                                    >
+                                    <li key={i} onMouseMove={(e) => handle3DHover(e, 30)} onMouseLeave={handle3DLeave}
+                                        className="pop-pill flex items-center gap-2.5 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2.5 rounded-full font-bold tracking-wide text-emerald-400 text-sm shadow-lg cursor-default">
                                         <CheckCircle size={16} className="shrink-0"/>
                                         <span>{item}</span>
                                     </li>
@@ -497,12 +489,8 @@ export default function TourDetailsPage() {
 
                 {/* RIGHT COLUMN: Interactive 3D Booking Card */}
                 <div className="lg:col-span-5 xl:col-span-4 relative mt-4 lg:mt-0 z-50">
-                    <div
-                        ref={sidebarRef}
-                        onMouseMove={(e) => handle3DHover(e, 15)}
-                        onMouseLeave={handle3DLeave}
-                        className="booking-card lg:sticky lg:top-32 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden transition-shadow hover:shadow-[0_30px_80px_rgba(234,88,12,0.15)]"
-                    >
+                    <div ref={sidebarRef} onMouseMove={(e) => handle3DHover(e, 15)} onMouseLeave={handle3DLeave}
+                         className="booking-card lg:sticky lg:top-32 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden transition-shadow hover:shadow-[0_30px_80px_rgba(234,88,12,0.15)]">
 
                         {/* Live Social Proof Badge */}
                         <div
@@ -512,19 +500,21 @@ export default function TourDetailsPage() {
                                     className="absolute w-full h-full bg-red-500 rounded-full animate-ping opacity-40"></span>
                                 <Eye size={14} className="text-red-500 relative z-10"/>
                             </div>
+                            {/* 🔥 Copy Fix: "Travelers" instead of "People" */}
                             <span
                                 className="text-red-300 text-[10px] font-bold uppercase tracking-widest leading-none mt-0.5">
-                                {viewers} People viewing
+                                {viewers} Travelers looking right now
                             </span>
                         </div>
 
                         {/* Price Section */}
                         <div className="mb-8 border-b border-white/10 pb-8 relative z-10">
-                            <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest block mb-2">Total Price</span>
+                            <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest block mb-2">Total Fare</span>
                             <div className="flex items-end gap-1 text-white">
                                 <IndianRupee size={28} className="text-orange-500 mb-1"/>
+                                {/* 🔥 Typography Fix */}
                                 <span
-                                    className="text-5xl font-black tracking-tighter leading-none">{tour.tourPrice?.toLocaleString("en-IN")}</span>
+                                    className="font-heading text-4xl md:text-5xl font-black tracking-tighter leading-none">{tour.tourPrice?.toLocaleString("en-IN")}</span>
                             </div>
                             <span className="text-zinc-500 text-[11px] font-medium mt-2 block tracking-wide">Per person, including taxes.</span>
                         </div>
@@ -581,7 +571,8 @@ export default function TourDetailsPage() {
                                 disabled={isSoldOut || daysLeft === "CLOSED"}
                                 className="w-full py-5 bg-orange-600 disabled:bg-white/5 disabled:text-zinc-600 text-white font-black uppercase tracking-widest text-sm rounded-xl transition-all hover:bg-orange-500 active:scale-[0.98] flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(234,88,12,0.4)] disabled:shadow-none border border-transparent"
                             >
-                                {isSoldOut ? "Tour Full" : daysLeft === "CLOSED" ? "Booking Closed" : "Proceed to Book"}
+                                {/* 🔥 Copy Fix: "Secure Your Spot" */}
+                                {isSoldOut ? "Tour Full" : daysLeft === "CLOSED" ? "Booking Closed" : "Secure Your Spot"}
                                 {!isSoldOut && daysLeft !== "CLOSED" && <ArrowRight size={18}/>}
                             </button>
 

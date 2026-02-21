@@ -48,7 +48,6 @@ export default function PaymentPage() {
     const [paymentMode, setPaymentMode] = useState<PaymentMode>("ONLINE");
     const [paymentStatus, setPaymentStatus] = useState<SuccessState>(null);
 
-    // Terminal logs state for the "Crazy" processing effect
     const [terminalLog, setTerminalLog] = useState<string>("");
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +58,8 @@ export default function PaymentPage() {
     useEffect(() => {
         if (!idToFetch || idToFetch === "undefined") {
             setLoading(false);
-            setError("Invalid Booking URL. Mission aborted.");
+            // 🔥 Copy Fix
+            setError("Invalid Booking URL. Cannot process payment.");
             return;
         }
 
@@ -68,7 +68,8 @@ export default function PaymentPage() {
                 const {data} = await api.get(`/bookings/${idToFetch}`);
                 setBooking(data.data);
             } catch (err: any) {
-                setError("Unable to decrypt mission coordinates. Access denied.");
+                // 🔥 Copy Fix
+                setError("Unable to load booking details. Please try again.");
             } finally {
                 setLoading(false);
             }
@@ -79,13 +80,14 @@ export default function PaymentPage() {
     // Terminal Processing Sequence Simulation
     useEffect(() => {
         if (processing && !paymentStatus) {
+            // 🔥 Copy Fix: Changed to secure banking/travel terms
             const logs = [
-                "INITIATING SECURE UPLINK...",
-                "ESTABLISHING AES-256 TUNNEL...",
-                "VERIFYING OPERATIVE CREDENTIALS...",
-                "BYPASSING REGIONAL NODES...",
-                "AWAITING GATEWAY HANDSHAKE...",
-                "TRANSMITTING ENCRYPTED PAYLOAD..."
+                "INITIATING SECURE CONNECTION...",
+                "SECURING PAYMENT GATEWAY...",
+                "VERIFYING TRAVELER DETAILS...",
+                "PROCESSING TRANSACTION...",
+                "AWAITING BANK CONFIRMATION...",
+                "FINALIZING BOOKING..."
             ];
             let i = 0;
             setTerminalLog(logs[0]);
@@ -207,7 +209,6 @@ export default function PaymentPage() {
                     {y: 0, opacity: 1, rotationX: 0, scale: 1, duration: 1.5, ease: "back.out(1.2)"},
                     "-=1"
                 )
-                // The satisfying physical "STAMP" effect
                 .fromTo(".auth-stamp",
                     {scale: 5, opacity: 0, rotation: 15},
                     {scale: 1, opacity: 1, rotation: -5, duration: 0.5, ease: "bounce.out"},
@@ -223,7 +224,7 @@ export default function PaymentPage() {
 
         try {
             const isScriptLoaded = await loadRazorpayScript();
-            if (!isScriptLoaded) throw new Error("Uplink failed. Check connection.");
+            if (!isScriptLoaded) throw new Error("Payment gateway connection failed.");
 
             const {data: orderResponse} = await api.post("/payment/create-order", {
                 bookingId: booking.bookingId,
@@ -234,12 +235,14 @@ export default function PaymentPage() {
                 key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_YOUR_KEY",
                 amount: orderData.amount,
                 currency: orderData.currency || "INR",
-                name: "DD Tours Terminal",
-                description: `Target: ${booking.tour?.tourTitle}`,
+                name: "DD Tours",
+                // 🔥 Copy Fix
+                description: `Tour: ${booking.tour?.tourTitle}`,
                 order_id: orderData.id,
                 prefill: {
-                    name: booking.user?.userName || "Operative",
-                    email: booking.user?.userEmail || "operative@ddtours.com",
+                    // 🔥 Copy Fix
+                    name: booking.user?.userName || "Traveler",
+                    email: booking.user?.userEmail || "traveler@ddtours.com",
                 },
                 theme: {color: "#ea580c"},
                 handler: async function (response: any) {
@@ -266,7 +269,7 @@ export default function PaymentPage() {
             paymentObject.open();
 
         } catch (err: any) {
-            setError(err.response?.data?.message || err.message || "Uplink authorization failed.");
+            setError(err.response?.data?.message || err.message || "Payment authorization failed.");
             setProcessing(false);
         }
     };
@@ -274,7 +277,6 @@ export default function PaymentPage() {
     const handleOfflinePayment = () => {
         setProcessing(true);
         setError(null);
-        // Let the terminal animation play out for 3 seconds before succeeding
         setTimeout(() => {
             setProcessing(false);
             setPaymentStatus("OFFLINE_SUCCESS");
@@ -294,11 +296,11 @@ export default function PaymentPage() {
                         className="absolute w-32 h-32 border-t-2 border-r-2 border-orange-500 rounded-full animate-spin"></div>
                     <Radar size={56} className="text-orange-500 animate-pulse"/>
                 </div>
+                {/* 🔥 Copy Fix */}
                 <div
                     className="font-mono text-xs tracking-[0.4em] uppercase overflow-hidden whitespace-nowrap animate-pulse border-r-2 border-orange-500 pr-1">
-                    Decrypting Mission Coordinates...
+                    Preparing Secure Checkout...
                 </div>
-                {/* Fake Hex Codes flashing */}
                 <div
                     className="absolute bottom-10 left-10 font-mono text-[8px] text-orange-500/30 w-32 h-32 overflow-hidden opacity-50">
                     {Array.from({length: 10}).map((_, i) => (
@@ -321,7 +323,6 @@ export default function PaymentPage() {
             <div
                 className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#020202]/80 to-[#020202] pointer-events-none z-0"></div>
 
-            {/* Ambient Moving Orbs */}
             <div
                 className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] bg-orange-600/10 blur-[120px] rounded-full pointer-events-none mix-blend-screen z-0 animate-pulse"></div>
             <div
@@ -333,12 +334,10 @@ export default function PaymentPage() {
             <div ref={successRef}
                  className={`absolute inset-0 z-50 overflow-hidden ${!paymentStatus ? 'hidden' : 'block'}`}>
 
-                {/* The Aperture Wipe Overlay */}
                 <div className="wipe-overlay absolute inset-0 bg-[#050505] z-10 clip-path-[circle(0%_at_50%_50%)]">
                     {paymentStatus !== "FAILED" && (
                         <video autoPlay loop muted playsInline
                                className="success-video absolute inset-0 w-full h-full object-cover">
-                            {/* High quality nature landscape replacement */}
                             <source
                                 src="https://assets.mixkit.co/videos/preview/mixkit-beautiful-landscape-of-a-mountain-valley-with-a-river-4293-large.mp4"
                                 type="video/mp4"/>
@@ -356,11 +355,10 @@ export default function PaymentPage() {
                             <div
                                 className={`absolute top-0 left-0 w-full h-1 ${paymentStatus === 'FAILED' ? 'bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.8)]' : 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.8)]'}`}></div>
 
-                            {/* GSAP Slams this stamp down! */}
                             {paymentStatus !== "FAILED" && (
                                 <div
                                     className="auth-stamp absolute top-8 right-8 border-4 border-emerald-500 text-emerald-500 px-4 py-2 font-black text-2xl uppercase tracking-widest opacity-0 z-50 rounded-lg shadow-[0_0_20px_rgba(16,185,129,0.4)] mix-blend-screen pointer-events-none">
-                                    AUTHORIZED
+                                    CONFIRMED
                                 </div>
                             )}
 
@@ -369,13 +367,15 @@ export default function PaymentPage() {
                                 {paymentStatus === 'FAILED' ? <XCircle size={40}/> : <CheckCircle size={40}/>}
                             </div>
 
-                            <h1 className="text-center text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2">
-                                {paymentStatus === 'FAILED' ? 'Uplink Failed' : 'Target Secured'}
+                            {/* 🔥 Typography & Copy Fix */}
+                            <h1 className="font-heading text-center text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2">
+                                {paymentStatus === 'FAILED' ? 'Payment Failed' : 'Booking Confirmed'}
                             </h1>
 
+                            {/* 🔥 Copy Fixes */}
                             <p className="text-center text-zinc-400 font-mono text-sm tracking-wider mb-10">
-                                {paymentStatus === "ONLINE_SUCCESS" && `FUNDS VERIFIED • STANDBY FOR DEPLOYMENT`}
-                                {paymentStatus === "OFFLINE_SUCCESS" && `INTENT LOGGED • AWAITING MANUAL WIRE TRANSFER`}
+                                {paymentStatus === "ONLINE_SUCCESS" && `FUNDS VERIFIED • GET READY FOR ADVENTURE`}
+                                {paymentStatus === "OFFLINE_SUCCESS" && `DETAILS RECEIVED • AWAITING BANK TRANSFER`}
                                 {paymentStatus === "FAILED" && `TRANSACTION REJECTED • NO FUNDS DEBITED`}
                             </p>
 
@@ -390,15 +390,16 @@ export default function PaymentPage() {
                                     </div>
 
                                     <div className="relative z-10">
+                                        {/* 🔥 Copy Fixes */}
                                         <span
-                                            className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Target Identity</span>
+                                            className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Tour Destination</span>
                                         <span
                                             className="text-white font-bold text-lg leading-none uppercase mb-6 block truncate pr-16">{booking?.tour?.tourTitle}</span>
 
                                         <div className="flex justify-between items-end">
                                             <div>
                                                 <span
-                                                    className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Authorization Code</span>
+                                                    className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Booking Reference</span>
                                                 <span
                                                     className="text-orange-500 font-mono text-xl tracking-widest">{booking?.bookingId.split('-')[0].toUpperCase()}</span>
                                             </div>
@@ -407,15 +408,16 @@ export default function PaymentPage() {
                                 </div>
                             )}
 
+                            {/* 🔥 Copy Fixes */}
                             {paymentStatus === "FAILED" ? (
                                 <button onClick={() => setPaymentStatus(null)}
                                         className="w-full py-4 bg-white/10 hover:bg-white/20 text-white font-mono uppercase tracking-widest text-sm rounded-xl transition-colors border border-white/20">
-                                    Re-Initiate Sequence
+                                    Try Payment Again
                                 </button>
                             ) : (
                                 <button onClick={() => router.push("/profile")}
                                         className="w-full relative py-4 bg-orange-600 hover:bg-orange-500 text-white font-black uppercase tracking-[0.2em] text-sm rounded-xl transition-all shadow-[0_0_30px_rgba(234,88,12,0.3)] flex items-center justify-center gap-3">
-                                    Access Headquarters <ArrowRight size={16}/>
+                                    Go to Dashboard <ArrowRight size={16}/>
                                 </button>
                             )}
                         </div>
@@ -437,15 +439,16 @@ export default function PaymentPage() {
                             <Lock size={18} className="text-orange-500"/>
                         </div>
                         <div>
-                            <h1 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest">Secure
-                                Uplink</h1>
+                            {/* 🔥 Typography & Copy Fix */}
+                            <h1 className="font-heading text-xl md:text-2xl font-black text-white uppercase tracking-widest">Secure
+                                Checkout</h1>
                             <p className="font-mono text-[10px] md:text-xs text-orange-500 tracking-[0.3em] animate-pulse">AES-256
                                 ENCRYPTION ACTIVE</p>
                         </div>
                     </div>
                     <button onClick={() => router.back()} disabled={processing}
                             className="text-zinc-500 hover:text-white font-mono text-xs tracking-widest uppercase transition-colors flex items-center gap-2 disabled:opacity-50">
-                        <span className="hidden sm:inline">Abort</span> [ESC]
+                        <span className="hidden sm:inline">Cancel</span> [ESC]
                     </button>
                 </div>
 
@@ -457,23 +460,24 @@ export default function PaymentPage() {
                         <div ref={floatingCardRef}
                              className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 md:p-10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-shadow hover:shadow-[0_20px_60px_rgba(234,88,12,0.2)]">
 
-                            {/* Scanner line overlay */}
                             <div
                                 className="scanner-line absolute left-0 w-full h-[2px] bg-orange-500/80 shadow-[0_0_20px_#ea580c] z-50 pointer-events-none"></div>
 
                             <div
                                 className="flex items-center justify-between mb-10 pb-6 border-b border-white/10 pointer-events-none">
+                                {/* 🔥 Copy Fix */}
                                 <h2 className="text-zinc-400 font-mono text-xs tracking-[0.2em] uppercase flex items-center gap-2">
-                                    <Cpu size={14} className="text-orange-500"/> Target Details
+                                    <Cpu size={14} className="text-orange-500"/> Booking Summary
                                 </h2>
                                 <span
-                                    className="text-orange-500 font-mono text-[10px] font-bold tracking-widest bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">DOSSIER</span>
+                                    className="text-orange-500 font-mono text-[10px] font-bold tracking-widest bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">SUMMARY</span>
                             </div>
 
                             <div className="space-y-8 pointer-events-none">
                                 <div className="data-line overflow-hidden border-l-2 border-orange-500 pl-4">
+                                    {/* 🔥 Copy Fix */}
                                     <span
-                                        className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Operation Code</span>
+                                        className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Booking ID</span>
                                     <div className="text-white font-mono text-lg tracking-widest">
                                         {booking?.bookingId.split('-')[0].toUpperCase()}
                                     </div>
@@ -482,21 +486,24 @@ export default function PaymentPage() {
                                 <div className="data-line overflow-hidden border-l-2 border-white/20 pl-4">
                                     <span
                                         className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Destination</span>
+                                    {/* 🔥 Typography Fix */}
                                     <div
-                                        className="text-white font-bold text-2xl md:text-3xl uppercase tracking-wide leading-tight">
+                                        className="font-heading text-white font-bold text-2xl md:text-3xl uppercase tracking-wide leading-tight">
                                         {booking?.tour?.tourTitle}
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-8 pt-4">
                                     <div className="data-line overflow-hidden border-l-2 border-white/20 pl-4">
+                                        {/* 🔥 Copy Fix */}
                                         <span
-                                            className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Operatives</span>
+                                            className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Travelers</span>
                                         <div className="text-white font-mono text-xl">{booking?.totalGuests}</div>
                                     </div>
                                     <div className="data-line overflow-hidden border-l-2 border-emerald-500 pl-4">
+                                        {/* 🔥 Copy Fix */}
                                         <span
-                                            className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Required Funds</span>
+                                            className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] block mb-1">Total Due</span>
                                         <div className="text-emerald-400 font-mono text-2xl flex items-center">
                                             <IndianRupee size={20}
                                                          className="mr-1"/> {booking?.totalPrice?.toLocaleString("en-IN")}
@@ -526,11 +533,12 @@ export default function PaymentPage() {
                                 </div>
                             )}
 
-                            <h3 className="text-white font-black text-xl uppercase tracking-widest mb-6 flex items-center gap-3">
-                                <ScanFace className="text-orange-500"/> Select Uplink
+                            {/* 🔥 Typography & Copy Fix */}
+                            <h3 className="font-heading text-white font-black text-xl uppercase tracking-widest mb-6 flex items-center gap-3">
+                                <ScanFace className="text-orange-500"/> Payment Method
                             </h3>
 
-                            {/* Hardware-Style Toggle Buttons (Disabled while processing) */}
+                            {/* Hardware-Style Toggle Buttons */}
                             <div
                                 className={`flex bg-black/50 border border-white/10 rounded-xl p-1.5 mb-10 transition-opacity ${processing ? 'opacity-30 pointer-events-none' : ''}`}>
                                 <button
@@ -557,7 +565,7 @@ export default function PaymentPage() {
                                         <div className="text-green-500 mb-4 flex items-center gap-3">
                                             <div
                                                 className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                                            SYSTEM OVERRIDE IN PROGRESS
+                                            SECURING CONNECTION
                                         </div>
                                         <div className="text-green-400 opacity-80 space-y-2">
                                             <p className="typing-effect">&gt; {terminalLog}</p>
@@ -566,17 +574,18 @@ export default function PaymentPage() {
                                     </div>
                                 ) : paymentMode === "ONLINE" ? (
                                     <div className="animate-in fade-in zoom-in-95 duration-300">
+                                        {/* 🔥 Copy Fix */}
                                         <button
                                             onClick={handleOnlinePayment}
                                             className="w-full py-5 bg-orange-600 hover:bg-orange-500 text-white font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-[0_0_30px_rgba(234,88,12,0.2)] border border-transparent active:scale-[0.98] flex items-center justify-center gap-3 group"
                                         >
                                             <CreditCard size={20}
-                                                        className="group-hover:scale-110 transition-transform"/> Authorize
-                                            Transfer
+                                                        className="group-hover:scale-110 transition-transform"/> Pay
+                                            Securely
                                         </button>
                                         <div
                                             className="mt-5 text-center font-mono text-[10px] text-zinc-500 uppercase tracking-[0.2em]">
-                                            Powered by Razorpay Gateway
+                                            Powered by Razorpay
                                         </div>
                                     </div>
                                 ) : (
@@ -596,19 +605,18 @@ export default function PaymentPage() {
                                             <p className="flex justify-between"><span>IFSC:</span> <span
                                                 className="text-white">SBIN0001234</span></p>
                                         </div>
+                                        {/* 🔥 Copy Fix */}
                                         <button
                                             onClick={handleOfflinePayment}
                                             className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] flex justify-center items-center gap-3 active:scale-[0.98]"
                                         >
-                                            Confirm Intent to Transfer
+                                            Confirm Bank Transfer
                                         </button>
                                     </div>
                                 )}
                             </div>
-
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

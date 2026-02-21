@@ -41,6 +41,7 @@ export default function ReviewsPage() {
 
     const containerRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
+    const hasAnimated = useRef(false); // 🔥 The bulletproof animation lock
 
     // 1. Fetch Reviews
     const fetchReviews = async () => {
@@ -48,7 +49,7 @@ export default function ReviewsPage() {
             const {data} = await api.get("/reviews");
             setReviews(data.data);
         } catch (err) {
-            console.error("Failed to decrypt intel", err);
+            console.error("Failed to fetch reviews", err);
         } finally {
             setLoading(false);
         }
@@ -58,9 +59,13 @@ export default function ReviewsPage() {
         fetchReviews();
     }, []);
 
-    // 2. CRAZY 3D ENTRANCE ANIMATIONS
+    // 2. CRAZY 3D ENTRANCE ANIMATIONS (Locked to run only once!)
     useGSAP(() => {
-        if (loading || reviews.length === 0 || !containerRef.current) return;
+        // Wait until loaded, data exists, and ensure we haven't animated yet
+        if (loading || reviews.length === 0 || !containerRef.current || hasAnimated.current) return;
+
+        // Lock the animation so it never fires a second time
+        hasAnimated.current = true;
 
         const tl = gsap.timeline();
 
@@ -165,12 +170,13 @@ export default function ReviewsPage() {
             setSelectedFile(null);
             setPreviewUrl(null);
 
-            // Re-trigger fetch and animation
+            // Re-trigger fetch
             setLoading(true);
+            hasAnimated.current = false; // Allow animation to play again when refreshing the list
             fetchReviews();
 
         } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to transmit intel.");
+            alert(err.response?.data?.message || "Failed to submit review.");
             setUploading(false);
         } finally {
             setSubmitting(false);
@@ -178,12 +184,12 @@ export default function ReviewsPage() {
     };
 
     const handleDelete = async (reviewId: string) => {
-        if (!confirm("Wipe this record from the database?")) return;
+        if (!confirm("Are you sure you want to delete this review?")) return;
         try {
             await api.delete(`/reviews/${reviewId}`);
             setReviews(reviews.filter((r) => r.reviewId !== reviewId));
         } catch (err) {
-            alert("Wipe failed.");
+            alert("Failed to delete review.");
         }
     };
 
@@ -198,7 +204,7 @@ export default function ReviewsPage() {
                 </div>
                 <div
                     className="font-mono text-emerald-500 text-sm tracking-[0.3em] uppercase overflow-hidden whitespace-nowrap animate-pulse">
-                    Decrypting Mission Logs...
+                    Loading Traveler Reviews...
                 </div>
             </div>
         );
@@ -208,7 +214,6 @@ export default function ReviewsPage() {
         <div ref={containerRef}
              className="relative min-h-[100svh] bg-[#020202] text-white selection:bg-emerald-600 pb-24 overflow-hidden perspective-[1000px]">
 
-            {/* 🌐 TACTICAL BACKGROUND */}
             <div
                 className="bg-grid-overlay absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
             <div
@@ -218,21 +223,20 @@ export default function ReviewsPage() {
 
             <div className="max-w-7xl mx-auto px-4 md:px-8 pt-16 md:pt-24 relative z-10">
 
-                {/* 🌟 CINEMATIC HEADER */}
                 <div
                     className="header-anim flex flex-col md:flex-row items-center justify-between gap-8 mb-16 border-b border-white/10 pb-10">
                     <div>
                         <div
                             className="flex items-center justify-center md:justify-start gap-2 text-emerald-500 text-[10px] font-mono uppercase tracking-[0.3em] mb-3">
-                            <Cpu size={14}/> Verified Global Intel
+                            <ShieldCheck size={14}/> Verified Traveler Reviews
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]">
-                            WALL OF <span
-                            className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600"> LOVE</span>
+                        <h1 className="font-heading text-5xl md:text-7xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                            TRAVELER <span
+                            className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600"> STORIES</span>
                         </h1>
                         <p className="text-zinc-400 mt-4 max-w-lg font-medium tracking-wide">
-                            Access classified reviews, experiences, and post-mission intel directly from our official
-                            agents.
+                            Read authentic reviews, experiences, and travel stories directly from our community of
+                            adventurers.
                         </p>
                     </div>
 
@@ -243,16 +247,15 @@ export default function ReviewsPage() {
                         <div
                             className="absolute inset-0 bg-white/20 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
                         <span className="relative z-10 flex items-center gap-3">
-                {isAuthenticated ? <Plus size={18}/> : <MessageSquare size={18}/>}
-                            {isAuthenticated ? "Submit Intel" : "Login to Submit"}
-            </span>
+                            {isAuthenticated ? <Plus size={18}/> : <MessageSquare size={18}/>}
+                            {isAuthenticated ? "Write a Review" : "Login to Review"}
+                        </span>
                     </button>
                 </div>
 
-                {/* 📄 REVIEWS MASONRY GRID */}
                 {reviews.length === 0 ? (
-                    <div className="text-center py-20 text-zinc-500 font-mono tracking-widest uppercase">No Intel Found
-                        in Database.</div>
+                    <div className="text-center py-20 text-zinc-500 font-mono tracking-widest uppercase">No reviews
+                        found yet. Be the first to share your experience!</div>
                 ) : (
                     <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
                         {reviews.map((review) => (
@@ -262,18 +265,16 @@ export default function ReviewsPage() {
                                 onMouseLeave={handle3DLeave}
                                 className="review-card break-inside-avoid relative bg-black/60 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-[2rem] shadow-2xl hover:shadow-[0_20px_60px_rgba(16,185,129,0.15)] hover:border-emerald-500/30 transition-all group overflow-hidden cursor-default"
                             >
-                                {/* Decorative Tech Overlay */}
-                                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                                     <Fingerprint size={80}/>
                                 </div>
 
-                                {/* Optional Image Evidence */}
                                 {review.photoUrl && (
                                     <div
                                         className="mb-6 rounded-2xl overflow-hidden relative w-full h-56 border border-white/5">
                                         <Image
                                             src={review.photoUrl}
-                                            alt="Mission Evidence"
+                                            alt="Travel Experience"
                                             fill
                                             className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                                         />
@@ -281,12 +282,11 @@ export default function ReviewsPage() {
                                             className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent opacity-80"/>
                                         <span
                                             className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md px-2 py-1 rounded text-[8px] font-mono text-emerald-500 tracking-widest border border-emerald-500/30">
-                        EVIDENCE LOGGED
-                    </span>
+                                            TRAVEL PHOTO
+                                        </span>
                                     </div>
                                 )}
 
-                                {/* User Header */}
                                 <div className="flex justify-between items-start mb-6 relative z-10">
                                     <div className="flex items-center gap-4">
                                         <div
@@ -294,14 +294,14 @@ export default function ReviewsPage() {
                                             {review.user.userName.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-white text-base leading-tight">{review.user.userName}</h3>
-                                            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">Op
-                                                Date: {new Date(review.createdAt).toLocaleDateString('en-GB')}</p>
+                                            <h3 className="font-heading font-bold text-white text-base leading-tight uppercase tracking-wider">{review.user.userName}</h3>
+                                            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">
+                                                Traveled: {new Date(review.createdAt).toLocaleDateString('en-GB')}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Tour Name & Rating */}
                                 <div
                                     className="flex items-center justify-between mb-4 bg-white/5 p-3 rounded-xl border border-white/5 relative z-10">
                                     <div className="flex items-center gap-2 text-emerald-400">
@@ -315,12 +315,10 @@ export default function ReviewsPage() {
                                     </div>
                                 </div>
 
-                                {/* The highly readable Review Text */}
                                 <p className="text-zinc-300 text-base leading-relaxed font-medium relative z-10">
                                     "{review.reviewText}"
                                 </p>
 
-                                {/* Admin Delete */}
                                 {user?.role === "ADMIN" && (
                                     <button
                                         onClick={() => handleDelete(review.reviewId)}
@@ -334,22 +332,13 @@ export default function ReviewsPage() {
                     </div>
                 )}
 
-                {/* ==================================================== */}
-                {/* 🚀 UPLOAD INTEL MODAL (Cinematic Form)               */}
-                {/* ==================================================== */}
                 {showModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-
-                        {/* Blur Backdrop */}
-                        <div
-                            className="absolute inset-0 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300"
-                            onClick={() => setShowModal(false)}
-                        />
+                        <div className="absolute inset-0 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300"
+                             onClick={() => setShowModal(false)}/>
 
                         <div ref={modalRef}
                              className="bg-[#050505] border border-white/10 w-full max-w-xl rounded-[2.5rem] p-8 shadow-[0_30px_100px_rgba(0,0,0,1)] relative z-10 overflow-hidden">
-
-                            {/* Internal Tech Accents */}
                             <div
                                 className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/10 blur-[80px] rounded-full pointer-events-none"></div>
                             <div
@@ -360,20 +349,22 @@ export default function ReviewsPage() {
                                 <X size={20}/>
                             </button>
 
-                            <h2 className="text-3xl font-black text-white mb-2 tracking-tight uppercase flex items-center gap-3">
-                                <ShieldCheck className="text-emerald-500" size={32}/> Submit Intel
+                            <h2 className="font-heading text-3xl font-black text-white mb-2 tracking-tight uppercase flex items-center gap-3">
+                                <ShieldCheck className="text-emerald-500" size={32}/> Write a Review
                             </h2>
-                            <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] mb-8 border-b border-white/10 pb-6">Log
-                                your expedition details securely.</p>
+                            <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] mb-8 border-b border-white/10 pb-6">
+                                Share your travel experience with the community.
+                            </p>
 
                             <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
 
                                 <div className="space-y-2 group">
                                     <label
-                                        className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-emerald-500 transition-colors">Target
-                                        Designation (Tour Name)</label>
+                                        className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-emerald-500 transition-colors">
+                                        Tour Destination
+                                    </label>
                                     <input
-                                        type="text" required placeholder="e.g. Operation Kashmir"
+                                        type="text" required placeholder="e.g. Spiti Valley Expedition"
                                         value={formData.tourName}
                                         onChange={(e) => setFormData({...formData, tourName: e.target.value})}
                                         className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white text-base focus:border-emerald-500 focus:bg-emerald-500/5 focus:outline-none transition-all shadow-inner"
@@ -381,8 +372,9 @@ export default function ReviewsPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">Mission
-                                        Success Level (Rating)</label>
+                                    <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+                                        Overall Rating
+                                    </label>
                                     <div
                                         className="flex items-center gap-2 bg-black/50 border border-white/10 rounded-xl p-3 w-max">
                                         {[1, 2, 3, 4, 5].map((star) => (
@@ -398,20 +390,21 @@ export default function ReviewsPage() {
 
                                 <div className="space-y-2 group">
                                     <label
-                                        className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-emerald-500 transition-colors">Operative
-                                        Feedback</label>
+                                        className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-emerald-500 transition-colors">
+                                        Your Experience
+                                    </label>
                                     <textarea
-                                        required rows={4} placeholder="Detail your experience on the field..."
+                                        required rows={4} placeholder="Tell us about your trip..."
                                         value={formData.reviewText}
                                         onChange={(e) => setFormData({...formData, reviewText: e.target.value})}
                                         className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white text-base leading-relaxed focus:border-emerald-500 focus:bg-emerald-500/5 focus:outline-none resize-none transition-all shadow-inner"
                                     />
                                 </div>
 
-                                {/* Cinematic Image Dropzone */}
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">Attach
-                                        Evidence (Optional Photo)</label>
+                                    <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+                                        Add a Photo (Optional)
+                                    </label>
                                     <div className="relative group cursor-pointer">
                                         <input
                                             type="file" accept="image/*" onChange={handleFileChange}
@@ -422,13 +415,13 @@ export default function ReviewsPage() {
                                             {previewUrl ? (
                                                 <div
                                                     className="relative w-full h-40 rounded-xl overflow-hidden shadow-lg border border-white/10">
-                                                    <Image src={previewUrl} alt="Evidence Preview" fill
+                                                    <Image src={previewUrl} alt="Review Image" fill
                                                            className="object-cover"/>
                                                     <div
                                                         className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <ImageIcon size={24} className="text-white mb-2"/>
                                                         <span
-                                                            className="text-white font-mono text-xs uppercase tracking-widest">Replace Target</span>
+                                                            className="text-white font-mono text-xs uppercase tracking-widest">Replace Photo</span>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -438,7 +431,7 @@ export default function ReviewsPage() {
                                                         <Crosshair size={28}/>
                                                     </div>
                                                     <span
-                                                        className="text-xs font-mono uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300">Click to upload imagery</span>
+                                                        className="text-xs font-mono uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300">Click to upload a photo</span>
                                                 </>
                                             )}
                                         </div>
@@ -449,9 +442,9 @@ export default function ReviewsPage() {
                                     type="submit" disabled={submitting || uploading}
                                     className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-white/5 disabled:text-zinc-600 text-white font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] disabled:shadow-none flex justify-center items-center gap-3 active:scale-[0.98] border border-transparent disabled:border-white/10"
                                 >
-                                    {uploading ? <><Loader2 size={20} className="animate-spin"/> Transmitting
-                                        File...</> : submitting ? <><Loader2 size={20}
-                                                                             className="animate-spin"/> Encrypting...</> : "Transmit Intel"}
+                                    {uploading ? <><Loader2 size={20} className="animate-spin"/> Uploading
+                                        Photo...</> : submitting ? <><Loader2 size={20}
+                                                                              className="animate-spin"/> Submitting...</> : "Submit Review"}
                                 </button>
                             </form>
                         </div>

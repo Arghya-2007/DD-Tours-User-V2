@@ -9,7 +9,7 @@ import {ScrollTrigger} from "gsap/ScrollTrigger";
 import {useGSAP} from "@gsap/react";
 import {
     Calendar, User, ArrowLeft, Loader2, Youtube, Facebook,
-    MonitorPlay, Radio, Fingerprint, Share2, Globe
+    MonitorPlay, Radio, Fingerprint, Share2, Globe, Compass
 } from "lucide-react";
 import {api} from "@/lib/axios";
 
@@ -37,6 +37,7 @@ export default function SingleBlogPage() {
 
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLDivElement>(null);
+    const hasAnimated = useRef(false); // 🔥 The bulletproof animation lock
 
     useEffect(() => {
         const fetchBlog = async () => {
@@ -52,9 +53,13 @@ export default function SingleBlogPage() {
         if (params.slug) fetchBlog();
     }, [params.slug]);
 
-    // 🎬 CINEMATIC GSAP ORCHESTRATION
+    // 🎬 CINEMATIC GSAP ORCHESTRATION (Locked to run ONCE)
     useGSAP(() => {
-        if (loading || !blog || !containerRef.current) return;
+        // Wait for data to load and ensure it hasn't animated yet
+        if (loading || !blog || !containerRef.current || hasAnimated.current) return;
+
+        // Lock the gate!
+        hasAnimated.current = true;
 
         const customScroller = document.querySelector("#main-scroll-container");
         const scrollerTarget = customScroller || window;
@@ -78,7 +83,6 @@ export default function SingleBlogPage() {
             );
 
         // 2. Prose Content Scroll Reveals
-        // Targets every direct child of the prose container (p, h2, img, ul)
         const contentElements = gsap.utils.toArray(".blog-prose-content > *");
         contentElements.forEach((el: any) => {
             gsap.fromTo(el,
@@ -94,7 +98,7 @@ export default function SingleBlogPage() {
             );
         });
 
-        // 3. Drone Feed Video Fold-in
+        // 3. Video Fold-in
         if (videoRef.current) {
             gsap.fromTo(videoRef.current,
                 {y: 80, opacity: 0, rotationX: 20, scale: 0.95},
@@ -147,11 +151,11 @@ export default function SingleBlogPage() {
                     <div className="absolute w-32 h-32 border border-orange-600/30 rounded-full animate-ping"></div>
                     <div
                         className="absolute w-24 h-24 border-t-2 border-l-2 border-orange-500 rounded-full animate-spin"></div>
-                    <Fingerprint size={40} className="text-orange-500 animate-pulse"/>
+                    <Compass size={40} className="text-orange-500 animate-pulse"/>
                 </div>
                 <div
                     className="font-mono text-orange-500 text-sm tracking-[0.3em] uppercase overflow-hidden whitespace-nowrap animate-pulse">
-                    Decrypting Document...
+                    Loading Travel Story...
                 </div>
             </div>
         );
@@ -159,10 +163,12 @@ export default function SingleBlogPage() {
 
     if (!blog) return (
         <div className="text-center py-40 h-screen flex flex-col items-center justify-center bg-[#020202]">
-            <h2 className="text-4xl font-black text-white mb-6 uppercase tracking-widest">Document Not Found</h2>
+            <h2 className="font-heading text-4xl font-black text-white mb-6 uppercase tracking-widest">Story Not
+                Found</h2>
             <Link href="/blogs"
-                  className="px-8 py-3 bg-white/10 rounded-full text-white font-mono uppercase text-xs tracking-widest hover:bg-orange-600 transition-all border border-white/10">Return
-                to Archives</Link>
+                  className="px-8 py-3 bg-white/10 rounded-full text-white font-mono uppercase text-xs tracking-widest hover:bg-orange-600 transition-all border border-white/10">
+                Back to Journals
+            </Link>
         </div>
     );
 
@@ -179,7 +185,7 @@ export default function SingleBlogPage() {
                 onClick={() => router.back()}
                 className="fixed top-24 left-4 md:left-8 z-[100] bg-black/60 backdrop-blur-xl px-4 py-3 rounded-full text-zinc-300 font-mono text-[10px] uppercase tracking-[0.2em] border border-white/10 hover:border-orange-500 hover:text-orange-500 transition-all active:scale-95 hidden xl:flex items-center gap-2 shadow-[0_0_20px_rgba(0,0,0,0.8)]"
             >
-                <ArrowLeft size={14}/> Close File
+                <ArrowLeft size={14}/> Back
             </button>
 
             {/* ==================================================== */}
@@ -206,21 +212,21 @@ export default function SingleBlogPage() {
                     <div className="max-w-4xl mx-auto">
                         <div
                             className="hero-hud flex flex-wrap items-center gap-4 text-[10px] md:text-xs font-mono text-zinc-300 mb-6 uppercase tracking-[0.2em]">
-                    <span
-                        className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-md border border-white/10 shadow-lg">
-                        <Calendar size={14} className="text-orange-500"/>
-                        {new Date(blog.createdAt).toLocaleDateString('en-GB')}
-                    </span>
+                            <span
+                                className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-md border border-white/10 shadow-lg">
+                                <Calendar size={14} className="text-orange-500"/>
+                                {new Date(blog.createdAt).toLocaleDateString('en-GB')}
+                            </span>
                             {blog.author && (
                                 <span
                                     className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-md border border-white/10 shadow-lg">
-                            <User size={14} className="text-orange-500"/>
+                                    <User size={14} className="text-orange-500"/>
                                     {blog.author.userName}
-                        </span>
+                                </span>
                             )}
                         </div>
 
-                        <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] md:leading-[1.05] tracking-tighter drop-shadow-[0_0_30px_rgba(0,0,0,1)]">
+                        <h1 className="hero-title font-heading text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] md:leading-[1.05] tracking-tighter drop-shadow-[0_0_30px_rgba(0,0,0,1)]">
                             {blog.title}
                         </h1>
                     </div>
@@ -236,7 +242,7 @@ export default function SingleBlogPage() {
                 <div
                     dangerouslySetInnerHTML={{__html: blog.content}}
                     className="blog-prose-content prose prose-lg md:prose-xl prose-invert max-w-none
-            prose-headings:font-black prose-headings:tracking-tight prose-headings:text-white
+            prose-headings:font-heading prose-headings:font-black prose-headings:tracking-tight prose-headings:text-white
             prose-p:text-zinc-300 prose-p:leading-[1.8] prose-p:font-medium
             prose-a:text-orange-500 prose-a:no-underline hover:prose-a:underline
             prose-img:rounded-3xl prose-img:shadow-[0_20px_50px_rgba(0,0,0,0.5)] prose-img:border prose-img:border-white/5
@@ -245,7 +251,7 @@ export default function SingleBlogPage() {
                 />
 
                 {/* ==================================================== */}
-                {/* 🎥 DRONE FEED (Video Embed Section)                    */}
+                {/* 🎥 VIDEO EMBED SECTION                               */}
                 {/* ==================================================== */}
                 {blog.youtubeUrl && getYoutubeEmbedUrl(blog.youtubeUrl) && (
                     <div ref={videoRef} onMouseMove={(e) => handle3DHover(e, 3)} onMouseLeave={handle3DLeave}
@@ -253,13 +259,13 @@ export default function SingleBlogPage() {
 
                         {/* HUD Header for Video */}
                         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
-                            <h3 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
-                                <MonitorPlay className="text-orange-500" size={28}/> Mission Visual Log
+                            <h3 className="font-heading text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
+                                <MonitorPlay className="text-orange-500" size={28}/> Video Experience
                             </h3>
                             <div
                                 className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-md w-max">
                                 <div className="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
-                                <span className="text-red-500 font-mono text-[10px] uppercase tracking-widest">Live Drone Feed</span>
+                                <span className="text-red-500 font-mono text-[10px] uppercase tracking-widest">Watch Tour</span>
                             </div>
                         </div>
 
@@ -273,7 +279,7 @@ export default function SingleBlogPage() {
 
                             <iframe
                                 src={getYoutubeEmbedUrl(blog.youtubeUrl)!}
-                                title="Mission Video Log"
+                                title="Tour Video Log"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
                                 className="absolute inset-0 w-full h-full grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
@@ -283,29 +289,29 @@ export default function SingleBlogPage() {
                 )}
 
                 {/* ==================================================== */}
-                {/* 🔗 COMMUNICATIONS (Social Links)                     */}
+                {/* 🔗 SOCIAL LINKS                                      */}
                 {/* ==================================================== */}
                 {(blog.facebookUrl || blog.youtubeUrl) && (
                     <div
                         className="mt-20 pt-10 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-8 bg-[#0a0a0a]/50 p-8 rounded-3xl backdrop-blur-md">
                         <div>
-                            <h4 className="text-white font-black uppercase tracking-widest mb-2 flex items-center gap-2">
-                                <Radio size={18} className="text-emerald-500"/> External Communications
+                            <h4 className="font-heading text-white font-black uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <Globe size={18} className="text-emerald-500"/> Connect With Us
                             </h4>
-                            <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em]">Transmit or
-                                view further data on our social grids.</p>
+                            <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em]">Explore more
+                                photos and videos on our social channels.</p>
                         </div>
                         <div className="flex flex-wrap gap-4 w-full md:w-auto">
                             {blog.facebookUrl && (
                                 <a href={blog.facebookUrl} target="_blank" rel="noopener noreferrer"
                                    className="flex-1 md:flex-none flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-[#1877F2]/10 border border-[#1877F2]/50 hover:bg-[#1877F2] text-[#1877F2] hover:text-white font-mono font-bold text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(24,119,242,0.2)]">
-                                    <Facebook size={16}/> Data Link
+                                    <Facebook size={16}/> Facebook
                                 </a>
                             )}
                             {blog.youtubeUrl && (
                                 <a href={blog.youtubeUrl} target="_blank" rel="noopener noreferrer"
                                    className="flex-1 md:flex-none flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-[#FF0000]/10 border border-[#FF0000]/50 hover:bg-[#FF0000] text-[#FF0000] hover:text-white font-mono font-bold text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(255,0,0,0.2)]">
-                                    <Youtube size={16}/> Video DB
+                                    <Youtube size={16}/> YouTube
                                 </a>
                             )}
                         </div>

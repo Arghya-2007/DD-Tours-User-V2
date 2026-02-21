@@ -9,7 +9,7 @@ import {useGSAP} from "@gsap/react";
 import {
     User, Mail, Phone, MapPin, Calendar, Edit2, Save, Trash2,
     Loader2, LogOut, CreditCard, Compass, Star, ArrowRight, AlertTriangle,
-    CheckCircle, Clock, ShieldCheck, Download, IndianRupee, Fingerprint, Cpu, Target, ScanFace, Radar
+    CheckCircle, Clock, ShieldCheck, Download, IndianRupee, Fingerprint, Cpu, Target, ScanFace, Radar, Map
 } from "lucide-react";
 import {api} from "@/lib/axios";
 import {useAuthStore} from "@/store/authStore";
@@ -44,7 +44,7 @@ export default function ProfilePage() {
     const {logout, isAuthenticated} = useAuthStore();
 
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<"PROFILE" | "MISSIONS">("PROFILE");
+    const [activeTab, setActiveTab] = useState<"PROFILE" | "BOOKINGS">("PROFILE");
     const [isEditing, setIsEditing] = useState(false);
 
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -67,7 +67,7 @@ export default function ProfilePage() {
     };
 
     const formatDateForDisplay = (isoString: string | null) => {
-        if (!isoString) return "CLASSIFIED";
+        if (!isoString) return "NOT PROVIDED";
         return new Date(isoString).toLocaleDateString('en-GB', {
             day: '2-digit',
             month: 'short',
@@ -96,7 +96,7 @@ export default function ProfilePage() {
                 if (Array.isArray(fetchedBookings)) setBookings(fetchedBookings);
 
             } catch (err) {
-                setError("Failed to initialize Headquarters. Signal lost.");
+                setError("Failed to load profile details. Please try again.");
             } finally {
                 setLoading(false);
             }
@@ -201,23 +201,23 @@ export default function ProfilePage() {
             await api.patch("/user/update-profile", payload);
             setProfile(formData);
             setIsEditing(false);
-            setSuccessMsg("Intel updated and encrypted successfully.");
+            setSuccessMsg("Profile details updated successfully.");
             setTimeout(() => setSuccessMsg(""), 4000);
         } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to update intel.");
+            setError(err.response?.data?.message || "Failed to update profile.");
         } finally {
             setSaving(false);
         }
     };
 
     const handleDelete = async () => {
-        if (!confirm("CRITICAL WARNING: Terminate operative account? All mission logs will be wiped. This cannot be undone.")) return;
+        if (!confirm("Warning: Are you sure you want to delete your account? All booking history will be lost. This cannot be undone.")) return;
         try {
             await api.delete("/user/delete-account");
             logout();
             router.push("/login");
         } catch (err: any) {
-            alert("Termination failed: " + (err.response?.data?.message));
+            alert("Account deletion failed: " + (err.response?.data?.message));
         }
     };
 
@@ -244,7 +244,7 @@ export default function ProfilePage() {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Mission Pass - ${invoice.invoiceId}</title>
+          <title>Boarding Pass - ${invoice.invoiceId}</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
             body { font-family: 'Inter', sans-serif; background: #fff; color: #111; padding: 40px; margin: 0; }
@@ -269,7 +269,7 @@ export default function ProfilePage() {
             <div class="pass-header">
               <div>
                 <h1>DD Tours</h1>
-                <p>Official Mission Pass</p>
+                <p>Official Boarding Pass</p>
               </div>
               <div style="text-align: right;">
                 <p style="font-size: 16px; font-weight: 900; opacity: 1; letter-spacing: 1px;">${invoice.invoiceId}</p>
@@ -278,11 +278,11 @@ export default function ProfilePage() {
             </div>
             <div class="pass-body">
               <div class="field-group" style="grid-column: span 2;">
-                <div class="label">Target Destination</div>
+                <div class="label">Destination</div>
                 <div class="value destination">${invoice.tourTitle}</div>
               </div>
               <div class="field-group">
-                <div class="label">Primary Operative</div>
+                <div class="label">Lead Traveler</div>
                 <div class="value">${invoice.customerName}</div>
               </div>
               <div class="field-group">
@@ -298,12 +298,12 @@ export default function ProfilePage() {
             })}</div>
               </div>
               <div class="field-group">
-                <div class="label">Total Investment</div>
+                <div class="label">Total Paid</div>
                 <div class="value">INR ${invoice.amount.toLocaleString('en-IN')}</div>
               </div>
             </div>
             <div class="pass-footer">
-              Valid for entry. Present this document to your expedition leader.
+              Valid for entry. Present this document to your tour guide upon arrival.
             </div>
           </div>
           <script>
@@ -320,7 +320,7 @@ export default function ProfilePage() {
             printWindow.document.write(htmlContent);
             printWindow.document.close();
         } catch (err) {
-            alert("Failed to generate mission pass. Signal lost.");
+            alert("Failed to generate boarding pass. Please try again later.");
         } finally {
             setDownloadingId(null);
         }
@@ -333,11 +333,11 @@ export default function ProfilePage() {
                     <div className="absolute w-32 h-32 border border-orange-600/30 rounded-full animate-ping"></div>
                     <div
                         className="absolute w-24 h-24 border-t-2 border-r-2 border-orange-500 rounded-full animate-spin"></div>
-                    <Fingerprint size={40} className="text-orange-500 animate-pulse"/>
+                    <Compass size={40} className="text-orange-500 animate-pulse"/>
                 </div>
                 <div
                     className="font-mono text-orange-500 text-sm tracking-[0.3em] uppercase overflow-hidden whitespace-nowrap animate-pulse">
-                    Authenticating Operative...
+                    Loading Profile Dashboard...
                 </div>
             </div>
         );
@@ -365,16 +365,17 @@ export default function ProfilePage() {
                     <div>
                         <div
                             className="flex items-center justify-center md:justify-start gap-2 text-orange-500 text-[10px] font-mono uppercase tracking-[0.3em] mb-3">
-                            <Cpu size={14}/> Encrypted Uplink Active
+                            <ShieldCheck size={14}/> Secure Dashboard
                         </div>
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_20px_rgba(234,88,12,0.3)]">
-                            Operative <span className="text-orange-500">PROFILE</span>
+                        {/* 🔥 Typography Fix */}
+                        <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_20px_rgba(234,88,12,0.3)]">
+                            Traveler <span className="text-orange-500">PROFILE</span>
                         </h1>
                     </div>
                     <div
                         className="font-mono text-[10px] text-zinc-500 uppercase tracking-[0.2em] text-right hidden md:block">
-                        <p>STATUS: <span className="text-emerald-500">SECURE</span></p>
-                        <p>AUTHORIZATION: LEVEL 4</p>
+                        <p>STATUS: <span className="text-emerald-500">VERIFIED</span></p>
+                        <p>MEMBER TIER: EXPLORER</p>
                     </div>
                 </div>
 
@@ -388,7 +389,6 @@ export default function ProfilePage() {
                             onMouseLeave={handle3DLeave}
                             className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-center transition-shadow hover:shadow-[0_20px_60px_rgba(234,88,12,0.15)]"
                         >
-                            {/* Scanner line overlay */}
                             <div
                                 className="scanner-line absolute left-0 w-full h-[2px] bg-orange-500/50 shadow-[0_0_15px_#ea580c] z-50 pointer-events-none"></div>
                             <div
@@ -399,7 +399,8 @@ export default function ProfilePage() {
                                 {profile.userName.charAt(0).toUpperCase()}
                             </div>
 
-                            <h2 className="text-2xl font-black text-white uppercase tracking-wide relative z-10">{profile.userName}</h2>
+                            {/* 🔥 Typography Fix */}
+                            <h2 className="font-heading text-2xl font-black text-white uppercase tracking-wide relative z-10">{profile.userName}</h2>
                             <p className="text-zinc-400 font-mono text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 mt-2 relative z-10">
                                 <Mail size={12} className="text-orange-500"/> {profile.userEmail}
                             </p>
@@ -409,13 +410,13 @@ export default function ProfilePage() {
                                     onClick={() => setActiveTab("PROFILE")}
                                     className={`py-4 px-6 rounded-xl font-bold uppercase tracking-widest transition-all flex items-center gap-3 border ${activeTab === "PROFILE" ? "bg-orange-600 text-white border-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.4)]" : "bg-[#111] text-zinc-400 border-white/5 hover:border-white/20 hover:text-white"}`}
                                 >
-                                    <User size={16}/> Personal Intel
+                                    <User size={16}/> Personal Details
                                 </button>
                                 <button
-                                    onClick={() => setActiveTab("MISSIONS")}
-                                    className={`py-4 px-6 rounded-xl font-bold uppercase tracking-widest transition-all flex items-center gap-3 border ${activeTab === "MISSIONS" ? "bg-orange-600 text-white border-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.4)]" : "bg-[#111] text-zinc-400 border-white/5 hover:border-white/20 hover:text-white"}`}
+                                    onClick={() => setActiveTab("BOOKINGS")}
+                                    className={`py-4 px-6 rounded-xl font-bold uppercase tracking-widest transition-all flex items-center gap-3 border ${activeTab === "BOOKINGS" ? "bg-orange-600 text-white border-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.4)]" : "bg-[#111] text-zinc-400 border-white/5 hover:border-white/20 hover:text-white"}`}
                                 >
-                                    <Target size={16}/> Mission Logs
+                                    <Target size={16}/> My Bookings
                                 </button>
                             </div>
                         </div>
@@ -424,7 +425,7 @@ export default function ProfilePage() {
                         <div
                             className="bg-[#111]/80 backdrop-blur-md border border-red-500/20 rounded-3xl p-6 shadow-xl">
                             <p className="text-red-500/80 text-[10px] font-mono uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                                <AlertTriangle size={12}/> Danger Zone
+                                <AlertTriangle size={12}/> Account Security
                             </p>
                             <div className="flex flex-col gap-3">
                                 <button onClick={handleLogout}
@@ -433,7 +434,7 @@ export default function ProfilePage() {
                                 </button>
                                 <button onClick={handleDelete}
                                         className="flex items-center justify-between px-5 py-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-500 transition-all text-xs font-bold uppercase tracking-widest">
-                                    Terminate Account <Trash2 size={14}/>
+                                    Delete Account <Trash2 size={14}/>
                                 </button>
                             </div>
                         </div>
@@ -450,13 +451,14 @@ export default function ProfilePage() {
                                 className="tab-content-anim bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                                 <div
                                     className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 pb-6 border-b border-white/10 gap-4">
-                                    <h3 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                                        <ScanFace className="text-orange-500"/> Operative Dossier
+                                    {/* 🔥 Typography Fix */}
+                                    <h3 className="font-heading text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
+                                        <ScanFace className="text-orange-500"/> Profile Information
                                     </h3>
                                     {!isEditing ? (
                                         <button onClick={() => setIsEditing(true)}
                                                 className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
-                                            <Edit2 size={14}/> Update Intel
+                                            <Edit2 size={14}/> Edit Profile
                                         </button>
                                     ) : (
                                         <div className="flex gap-2">
@@ -466,7 +468,7 @@ export default function ProfilePage() {
                                             <button onClick={handleSave} disabled={saving}
                                                     className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(234,88,12,0.4)]">
                                                 {saving ? <Loader2 size={14} className="animate-spin"/> :
-                                                    <Save size={14}/>} Encrypt
+                                                    <Save size={14}/>} Save Changes
                                             </button>
                                         </div>
                                     )}
@@ -481,11 +483,11 @@ export default function ProfilePage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
 
-                                    {/* Input Blocks with Focus Glow */}
+                                    {/* Input Blocks */}
                                     <div className="space-y-2 group">
                                         <label
-                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Operative
-                                            Designation</label>
+                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Full
+                                            Name</label>
                                         {isEditing ? (
                                             <div className="relative">
                                                 <User
@@ -504,8 +506,8 @@ export default function ProfilePage() {
 
                                     <div className="space-y-2 group">
                                         <label
-                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Comm
-                                            Link (Phone)</label>
+                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Phone
+                                            Number</label>
                                         {isEditing ? (
                                             <div className="relative">
                                                 <Phone
@@ -519,7 +521,7 @@ export default function ProfilePage() {
                                                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner"/>
                                             </div>
                                         ) : (<div
-                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-sm font-medium">{profile.phoneNumber || "UNASSIGNED"}</div>)}
+                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-sm font-medium">{profile.phoneNumber || "NOT PROVIDED"}</div>)}
                                     </div>
 
                                     <div className="space-y-2 group">
@@ -540,13 +542,13 @@ export default function ProfilePage() {
                                                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white font-mono text-sm focus:border-orange-500 focus:bg-white/5 focus:outline-none transition-all shadow-inner"/>
                                             </div>
                                         ) : (<div
-                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-300 text-sm font-mono tracking-widest">{profile.aadharNumber || "UNASSIGNED"}</div>)}
+                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-300 text-sm font-mono tracking-widest">{profile.aadharNumber || "NOT PROVIDED"}</div>)}
                                     </div>
 
                                     <div className="space-y-2 group">
                                         <label
                                             className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Date
-                                            of Origin</label>
+                                            of Birth</label>
                                         {isEditing ? (
                                             <div className="relative">
                                                 <Calendar
@@ -565,8 +567,8 @@ export default function ProfilePage() {
 
                                     <div className="space-y-2 md:col-span-2 group">
                                         <label
-                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Base
-                                            Coordinates (Address)</label>
+                                            className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-orange-500 transition-colors">Home
+                                            Address</label>
                                         {isEditing ? (
                                             <div className="relative">
                                                 <MapPin
@@ -581,28 +583,28 @@ export default function ProfilePage() {
                                                           placeholder="Enter full address"/>
                                             </div>
                                         ) : (<div
-                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-sm font-medium min-h-[80px]">{profile.userAddress || "LOCATION UNKNOWN"}</div>)}
+                                            className="p-4 bg-[#0a0a0a] border border-white/5 rounded-xl text-zinc-200 text-sm font-medium min-h-[80px]">{profile.userAddress || "NOT PROVIDED"}</div>)}
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {/* ============================== */}
-                        {/* 🚀 TAB 2: MISSION LOGS */}
+                        {/* 🚀 TAB 2: MISSION LOGS / BOOKINGS */}
                         {/* ============================== */}
-                        {activeTab === "MISSIONS" && (
+                        {activeTab === "BOOKINGS" && (
                             <div className="space-y-6">
                                 {bookings.length === 0 ? (
                                     <div
-                                        className="tab-content-anim bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-16 text-center shadow-2xl">
-                                        <Radar size={64} className="mx-auto text-zinc-700 mb-6"/>
-                                        <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-3">No
-                                            Target Acquired</h3>
-                                        <p className="text-zinc-400 text-sm mb-8">You have not initiated any operational
-                                            deployments yet.</p>
+                                        className="tab-content-anim bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 sm:p-16 text-center shadow-2xl">
+                                        <Map size={64} className="mx-auto text-zinc-700 mb-6"/>
+                                        <h3 className="font-heading text-xl sm:text-2xl font-black text-white uppercase tracking-widest mb-3">No
+                                            Trips Booked Yet</h3>
+                                        <p className="text-zinc-400 text-sm mb-8">You haven't booked any adventures yet.
+                                            Start exploring!</p>
                                         <Link href="/tours"
-                                              className="inline-flex items-center gap-3 px-8 py-4 bg-orange-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-orange-500 transition-colors shadow-[0_0_20px_rgba(234,88,12,0.4)]">
-                                            Browse Operations <ArrowRight size={16}/>
+                                              className="inline-flex items-center justify-center gap-3 px-8 py-4 w-full sm:w-auto bg-orange-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-orange-500 transition-colors shadow-[0_0_20px_rgba(234,88,12,0.4)]">
+                                            Browse Tours <ArrowRight size={16}/>
                                         </Link>
                                     </div>
                                 ) : (
@@ -618,16 +620,15 @@ export default function ProfilePage() {
                                                 key={booking.bookingId}
                                                 onMouseMove={(e) => handle3DHover(e, 4)}
                                                 onMouseLeave={handle3DLeave}
-                                                className="tab-content-anim bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row group transition-shadow hover:shadow-[0_20px_60px_rgba(234,88,12,0.15)] hover:border-white/20 relative"
+                                                className="tab-content-anim bg-black/60 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col md:flex-row group transition-shadow hover:shadow-[0_20px_60px_rgba(234,88,12,0.15)] hover:border-white/20 relative"
                                             >
-
                                                 {/* Desktop Boarding Pass Download */}
                                                 {canDownloadPass && (
                                                     <button
                                                         onClick={() => handleDownloadPass(booking.bookingId)}
                                                         disabled={downloadingId === booking.bookingId}
                                                         className="absolute top-6 right-6 z-20 hidden md:flex items-center justify-center w-12 h-12 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95"
-                                                        title="Extract Mission Pass"
+                                                        title="Download Boarding Pass"
                                                     >
                                                         {downloadingId === booking.bookingId ?
                                                             <Loader2 size={20} className="animate-spin"/> :
@@ -637,7 +638,7 @@ export default function ProfilePage() {
 
                                                 {/* Left: Cinematic Image Box */}
                                                 <div
-                                                    className="relative w-full md:w-72 h-56 md:h-auto shrink-0 bg-[#050505] overflow-hidden">
+                                                    className="relative w-full md:w-72 h-48 sm:h-56 md:h-auto shrink-0 bg-[#050505] overflow-hidden">
                                                     <Image src={coverImage} alt="Tour" fill
                                                            sizes="(max-width: 768px) 100vw, 300px"
                                                            className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out opacity-80"/>
@@ -646,94 +647,97 @@ export default function ProfilePage() {
 
                                                     {/* Status Badges Overlay */}
                                                     <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                                                <span
-                                                    className="bg-black/80 backdrop-blur-md px-3 py-1.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest text-orange-500 border border-orange-500/30 shadow-lg">
-                                                    OP: {booking.tour?.tourStatus || "UNKNOWN"}
-                                                </span>
+                                <span
+                                    className="bg-black/80 backdrop-blur-md px-3 py-1.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest text-orange-500 border border-orange-500/30 shadow-lg w-max">
+                                    TOUR: {booking.tour?.tourStatus || "UNKNOWN"}
+                                </span>
                                                         <span
-                                                            className={`px-3 py-1.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest border shadow-lg backdrop-blur-md ${
-                                                                booking.bookingStatus === 'CONFIRMED' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' :
-                                                                    booking.bookingStatus === 'CANCELLED' ? 'bg-red-500/10 border-red-500/50 text-red-400' :
-                                                                        'bg-zinc-500/10 border-zinc-500/50 text-zinc-400'
-                                                            }`}>
-                                                    LOG: {booking.bookingStatus}
-                                                </span>
+                                                            className={`px-3 py-1.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest border shadow-lg backdrop-blur-md w-max ${booking.bookingStatus === 'CONFIRMED' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : booking.bookingStatus === 'CANCELLED' ? 'bg-red-500/10 border-red-500/50 text-red-400' : 'bg-zinc-500/10 border-zinc-500/50 text-zinc-400'}`}>
+                                    BOOKING: {booking.bookingStatus}
+                                </span>
                                                     </div>
                                                 </div>
 
-                                                {/* Right: Dossier Content */}
-                                                <div className="p-6 md:p-8 flex flex-col flex-1 relative z-10">
-                                                    <div className="flex justify-between items-start gap-4 mb-6">
-                                                        <div className="pr-10 md:pr-14">
-                                                    <span
-                                                        className="text-zinc-500 text-[10px] font-mono font-bold uppercase tracking-[0.2em] block mb-1">
-                                                        UPLINK ID: {booking.bookingId.split('-')[0].toUpperCase()}
-                                                    </span>
-                                                            <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight leading-none line-clamp-2">
-                                                                {booking.tour?.tourTitle || "Classified Target"}
+                                                {/* Right: Content - ADDED min-w-0 TO PREVENT OVERFLOW */}
+                                                <div
+                                                    className="p-5 sm:p-6 md:p-8 flex flex-col flex-1 min-w-0 relative z-10">
+                                                    <div
+                                                        className="flex flex-col sm:flex-row justify-between sm:items-start gap-4 mb-6">
+                                                        {/* REMOVED UNNECESSARY MOBILE RIGHT PADDING */}
+                                                        <div className="pr-0 md:pr-14 min-w-0 w-full">
+                                    <span
+                                        className="text-zinc-500 text-[10px] font-mono font-bold uppercase tracking-[0.2em] block mb-1 truncate">
+                                        BOOKING ID: {booking.bookingId.split('-')[0].toUpperCase()}
+                                    </span>
+                                                            {/* ADDED break-words TO HANDLE LONG TITLES */}
+                                                            <h3 className="font-heading text-xl sm:text-1xl md:text-2xl font-black text-white uppercase tracking-tight leading-tight line-clamp-2 break-words">
+                                                                {booking.tour?.tourTitle || "Unknown Tour"}
                                                             </h3>
                                                         </div>
-                                                        <div className="text-right shrink-0 hidden md:block">
+                                                        <div
+                                                            className="text-left sm:text-right shrink-0 hidden md:block">
                                                             <span
-                                                                className="text-zinc-500 text-[10px] font-mono uppercase tracking-[0.2em] block mb-1">Investment</span>
+                                                                className="text-zinc-500 text-[10px] font-mono uppercase tracking-[0.2em] block mb-1">Total Paid</span>
                                                             <span
-                                                                className="text-2xl font-black text-white flex items-center tracking-tighter">
-                                                        <IndianRupee size={20} className="text-orange-500 mr-0.5"/>
+                                                                className="font-heading text-2xl font-black text-white flex items-center tracking-tighter">
+                                        <IndianRupee size={20} className="text-orange-500 mr-0.5"/>
                                                                 {booking.totalPrice?.toLocaleString("en-IN")}
-                                                    </span>
+                                    </span>
                                                         </div>
                                                     </div>
 
-                                                    {/* Mission Details Breakdown */}
+                                                    {/* Details Breakdown */}
                                                     <div
-                                                        className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 pb-6 border-b border-white/5 font-mono text-xs">
-                                                        <div>
+                                                        className="grid grid-cols-2 lg:grid-cols-3 gap-y-5 gap-x-3 mb-6 sm:mb-8 pb-6 border-b border-white/5 font-mono text-[10px] sm:text-xs">
+                                                        <div className="min-w-0">
                                                             <span
-                                                                className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] block mb-1">Payment Status</span>
+                                                                className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] block mb-1 truncate">Payment Status</span>
                                                             <span
-                                                                className={`font-bold uppercase tracking-wider flex items-center gap-1.5 ${
-                                                                    booking.paymentStatus === 'COMPLETED' ? 'text-emerald-500' :
-                                                                        booking.paymentStatus === 'FAILED' ? 'text-red-500' : 'text-orange-500'
-                                                                }`}>
-                                                        {booking.paymentStatus === 'COMPLETED' ?
-                                                            <CheckCircle size={12}/> : <Clock size={12}/>}
-                                                                {booking.paymentStatus}
-                                                    </span>
+                                                                className={`font-bold uppercase tracking-wider flex items-center gap-1.5 truncate ${booking.paymentStatus === 'COMPLETED' ? 'text-emerald-500' : booking.paymentStatus === 'FAILED' ? 'text-red-500' : 'text-orange-500'}`}>
+                                        {booking.paymentStatus === 'COMPLETED' ?
+                                            <CheckCircle size={12} className="shrink-0"/> :
+                                            <Clock size={12} className="shrink-0"/>}
+                                                                <span
+                                                                    className="truncate">{booking.paymentStatus}</span>
+                                    </span>
                                                         </div>
-                                                        <div>
+                                                        <div className="min-w-0">
                                                             <span
-                                                                className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] block mb-1">Creation Date</span>
+                                                                className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] block mb-1 truncate">Booking Date</span>
                                                             <span
-                                                                className="text-zinc-300 font-bold uppercase tracking-wider">
-                                                        {formatDateForDisplay(booking.bookingDate)}
-                                                    </span>
+                                                                className="text-zinc-300 font-bold uppercase tracking-wider truncate">
+                                        {formatDateForDisplay(booking.bookingDate)}
+                                    </span>
                                                         </div>
-                                                        <div className="col-span-2 md:col-span-1 md:hidden mt-2">
+                                                        {/* Mobile Price View */}
+                                                        <div
+                                                            className="col-span-2 md:hidden mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
                                                             <span
-                                                                className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] block mb-1">Investment</span>
+                                                                className="text-zinc-500 text-[9px] uppercase tracking-[0.2em] block mb-1">Total Paid</span>
                                                             <span
-                                                                className="text-lg font-black text-white flex items-center font-sans tracking-tighter">
-                                                        <IndianRupee size={16} className="text-orange-500 mr-0.5"/>
+                                                                className="font-heading text-lg font-black text-white flex items-center tracking-tighter">
+                                        <IndianRupee size={16} className="text-orange-500 mr-0.5"/>
                                                                 {booking.totalPrice?.toLocaleString("en-IN")}
-                                                    </span>
+                                    </span>
                                                         </div>
                                                     </div>
 
-                                                    {/* Action Buttons */}
-                                                    <div className="mt-auto flex flex-wrap gap-3">
+                                                    {/* Action Buttons - CHANGED TO GRID ON MOBILE TO PREVENT OVERFLOW */}
+                                                    <div
+                                                        className="mt-auto grid grid-cols-1 sm:grid-cols-2 xl:flex xl:flex-wrap gap-3">
                                                         {booking.paymentStatus === 'PENDING' && booking.bookingStatus !== 'CANCELLED' && (
                                                             <Link href={`/bookings/${booking.bookingId}/pay`}
-                                                                  className="flex-1 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(234,88,12,0.3)]">
-                                                                <CreditCard size={14}/> Resume Payment
+                                                                  className="w-full xl:flex-1 py-3.5 sm:py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(234,88,12,0.3)]">
+                                                                <CreditCard size={14} className="shrink-0"/> Resume
+                                                                Payment
                                                             </Link>
                                                         )}
 
                                                         {canReview && (
                                                             <Link
                                                                 href={booking.tour?.slug ? `/tours/${booking.tour.slug}/review` : "#"}
-                                                                className="flex-1 py-3 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white text-emerald-500 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2"
-                                                            >
-                                                                <Star size={14}/> Debrief (Review)
+                                                                className="w-full xl:flex-1 py-3.5 sm:py-3 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white text-emerald-500 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2">
+                                                                <Star size={14} className="shrink-0"/> Write Review
                                                             </Link>
                                                         )}
 
@@ -742,19 +746,19 @@ export default function ProfilePage() {
                                                             <button
                                                                 onClick={() => handleDownloadPass(booking.bookingId)}
                                                                 disabled={downloadingId === booking.bookingId}
-                                                                className="flex-1 md:hidden py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2"
-                                                            >
+                                                                className="w-full sm:col-span-2 md:hidden py-3.5 sm:py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2">
                                                                 {downloadingId === booking.bookingId ?
-                                                                    <Loader2 size={14} className="animate-spin"/> :
-                                                                    <Download size={14}/>} Extract Pass
+                                                                    <Loader2 size={14}
+                                                                             className="animate-spin shrink-0"/> :
+                                                                    <Download size={14} className="shrink-0"/>} Download
+                                                                Pass
                                                             </button>
                                                         )}
 
                                                         <Link
                                                             href={booking.tour?.slug ? `/tours/${booking.tour.slug}` : "#"}
-                                                            className={`flex-1 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center`}
-                                                        >
-                                                            View Target
+                                                            className="w-full sm:col-span-2 xl:col-span-1 xl:flex-1 py-3.5 sm:py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-center flex items-center justify-center">
+                                                            View Tour
                                                         </Link>
                                                     </div>
                                                 </div>
@@ -765,7 +769,6 @@ export default function ProfilePage() {
                             </div>
                         )}
                     </div>
-
                 </div>
             </div>
         </div>
