@@ -150,7 +150,7 @@ export const Footer = () => {
                                 <div className="p-2 rounded-lg bg-white/5 group-hover:bg-primary/10 transition-colors">
                                     <MapPin size={18} className="text-primary"/>
                                 </div>
-                                <span className="mt-1 font-medium group-hover:text-zinc-200 transition-colors">DD Tours Headquarters,<br/>Ranaghat, West Bengal</span>
+                                <span className="mt-1 font-medium group-hover:text-zinc-200 transition-colors">DD Tours & Travels,<br/>Simurali, West Bengal, 741248</span>
                             </li>
                             <li className="flex items-center gap-4 text-zinc-400 text-sm group cursor-pointer">
                                 <div className="p-2 rounded-lg bg-white/5 group-hover:bg-primary/10 transition-colors">

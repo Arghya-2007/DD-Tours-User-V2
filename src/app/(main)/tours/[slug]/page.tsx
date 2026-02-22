@@ -310,7 +310,7 @@ export default function TourDetailsPage() {
     const showReadMore = allParagraphs.length > 2;
     const visibleParagraphs = isDescExpanded ? allParagraphs : allParagraphs.slice(0, 2);
 
-    const whatsappNumber = "+919876543210";
+    const whatsappNumber = "+919679812235";
     const whatsappMessage = encodeURIComponent(`Hi DD Tours! I am looking at the "${tour.tourTitle}" package. Can you share a few more details?`);
     const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
 

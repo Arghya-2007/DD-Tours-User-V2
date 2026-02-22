@@ -188,7 +188,7 @@ export default function BookingPage() {
 
     const totalPrice = tour.tourPrice * guestsCount;
 
-    const whatsappNumber = "+919876543210";
+    const whatsappNumber = "+919679812235";
     const whatsappMessage = encodeURIComponent(
         `Hi DD Tours! 🧭 I am currently finalizing my booking for the "${tour.tourTitle}" tour. Could you please help me with a quick question before I proceed to checkout?`
     );
